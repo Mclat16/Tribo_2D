@@ -3,6 +3,7 @@ from .settings import *
 from .materials import *
 
 from mp_api.client import MPRester
+import sys
 import subprocess
 import os
 import json
@@ -144,3 +145,119 @@ def amorph(filename,tempmelt,var):
     ])
     
     lmp.close
+
+def sheet(var):
+
+    x=var['2D'][1]
+    y=var['2D'][2]
+
+    filename = var['2D'][0]
+
+    cif = cifread(filename +".cif")
+    pot = count_elemtypes(f"{filename.lower()}/{filename.lower()}.sw")
+
+    multiples = {}
+
+    for element, cif_count in cif["elem_count"].items():
+        potential_count = pot.get(element, 0)  # Get count from potential file or default to 0
+        if cif_count > 0 and potential_count != 1:  # Avoid division by zero
+            multiples[element] = potential_count / cif_count
+        else:
+            multiples[element] = None  # If the CIF count is zero (which shouldn't happen), mark as None
+        
+    first_multiple = next(iter(multiples.values()))  # Get the first multiple
+
+    for multiple in multiples.values():
+        if multiple != first_multiple:  
+            raise ValueError("multiples must be the same")
+    
+    typecount = 0
+    for atomcount in pot.values:
+        typecount += atomcount
+    
+          
+    if os.path.exists("a.cif"):
+        os.remove("a.cif")  # Delete the existing file
+
+    if os.path.exists(f"{filename}.lmp"):
+        os.remove(f"{filename}.lmp")  # Delete the existing file
+
+    if first_multiple == None:
+        atomsk_command = f"atomsk {filename}.cif -duplicate 2 2 1 -orthogonal-cell  -ow a.lmp"
+        subprocess.run(atomsk_command, shell=True, check=True)
+
+    else:
+        if first_multiple ==1:
+            atomsk_command = f"atomsk {filename}.cif -ow a.lmp"
+            subprocess.run(atomsk_command, shell=True, check=True)
+        else:
+            m = np.sqrt(first_multiple)
+            atomsk_command = f"atomsk a.lmp -duplicate {m} {m} 1 -orthogonal-cell -ow a.lmp"
+            subprocess.run(atomsk_command, shell=True, check=True)
+
+        with open("a.lmp", 'r') as file:
+            lines = file.readlines()
+    
+            # Step 1: Update the atom types line to match pot_count
+            atom_types_line_index = None
+            for i, line in enumerate(lines):
+                if line.strip().startswith("atom types"):
+                    atom_types_line_index = i
+                    lines[i] = f"  {typecount}  atom types\n"  # Update atom types line
+
+            # Step 2: Create a dictionary of atom types from the 'Masses' section
+            atom_types = {}
+            masses_section_started = False
+            for i, line in enumerate(lines):
+                if line.strip() == "Masses":
+                    masses_section_started = True
+                    continue  # Skip the "Masses" header line
+                if masses_section_started:
+                    if line.strip() == "Atoms # atomic":  # End of the Masses section
+                        break
+                    parts = line.split()
+                    atom_type_id = parts[0]  # First column is the atom type ID (1, 2, ...)
+                    mass = float(parts[1])  # Second column is the mass
+                    # Extract the atom type name from the comment section (after the `#`)
+                    atom_type_name = line.split("#")[-1].strip()
+                    atom_types[int(atom_type_id)] = (atom_type_name, mass)
+            
+            
+            # Step 3: Modify the second column in the Atoms section
+            atoms_section_started = False
+            for i, line in enumerate(lines):
+                if line.strip() == "Atoms # atomic":
+                    atoms_section_started = True
+                    continue  # Skip the "Atoms # atomic" header line
+                if atoms_section_started:
+                    if line.strip() == "Masses":  # End of the Atoms section
+                        break
+                    parts = line.split()
+                    parts[1] = str(int(parts[1]))  # Increment the atom type index in the second column
+                    lines[i] = '  '.join(parts) + "\n"  # Join and update the line
+
+            # Save the modified file
+            with open("a.lmp", 'w') as file:
+                file.writelines(lines)
+
+
+
+
+                atomsk_command = f"atomsk a.lmp -duplicate 2 2 1 -orthogonal-cell -ow a.lmp"
+                subprocess.run(atomsk_command, shell=True, check=True)
+
+
+
+
+    xlo, xhi, ylo, yhi, zlo, zhi = get_model_dimensions(filename)
+    duplicate_a = round(x / xhi)
+    duplicate_b = round(y / yhi)
+
+    atomsk_command2 = f"atomsk a.lmp -duplicate {duplicate_a} {duplicate_b} 1  -ow {filename}.lmp"
+    os.remove("a.cif")
+
+    # atomsk_command = f"atomsk {filename} -duplicate 2 2 1 -cut above 0.5*BOX z -cut below 0.2*BOX z -orthogonal-cell cif -ow"
+    # atomsk_command = f"atomsk {filename} -duplicate 2 2 1 -orthogonal-cell cif -ow"
+
+
+    subprocess.run(atomsk_command2, shell=True, check=True)

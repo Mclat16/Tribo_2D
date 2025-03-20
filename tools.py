@@ -12,6 +12,8 @@ from pathlib import Path
 from CifFile import ReadCif
 import configparser
 import argparse
+import re
+from collections import defaultdict
 
 def matsearch(material_id):
     material_id = str(material_id)
@@ -30,30 +32,132 @@ def matsearch(material_id):
         structure.to(filename)
 
         return structure,formula,nelements,elements
+    
+def cifread(cif):
 
-def get_cell_length(cif):
     with open(cif, 'r') as f:
         lines = f.readlines()
-    a_length,b_length,c_length = [None]*3
     
+    lat_a,lat_b,lat_c = [None]*3
+    elements = []
+    reading_elements = False  # Flag to start reading elements
+    header_skipped =  False
+    formula = None
+    filename = os.path.basename(cif).split('.')[0]
+
     for line in lines:
         if line.startswith('_cell_length_a'):
-            a_length = float(line.split()[1])
+            lat_a = float(line.split()[1])
+
         elif line.startswith('_cell_length_b'):
-            b_length = float(line.split()[1])
+            lat_b = float(line.split()[1])
+
         elif line.startswith('_cell_length_c'):
-            c_length = float(line.split()[1])
-    
-    return a_length, b_length, c_length
+            lat_c = float(line.split()[1])
+
+        elif line.startswith('_chemical_formula_structural'):
+            formula = line.split(maxsplit=1)[1].strip()
+
+        elif line.startswith('_cell_angle_alpha'):
+            ang_a = float(line.split()[1])
+
+        elif line.startswith('_cell_angle_beta'):
+            ang_b = float(line.split()[1])
+        
+        elif line.startswith('_cell_angle_gamma'):
+            ang_g = float(line.split()[1])
+
+            # Detect when element section starts
+        elif line.strip().startswith('loop_'):
+            reading_elements = True  # Start reading element symbols
+            continue
+            # If reading elements, first skip headers
+        elif reading_elements == True and not header_skipped== True:
+            if line.strip().startswith('_'):  # These are column headers
+                continue  # Skip header lines
+            header_skipped = True  # Once we hit real data, stop skipping
+
+        # Now read element names
+        if reading_elements and header_skipped:
+            if line.strip().startswith('_') or line.strip().startswith('loop_') or line.strip() == "":
+                break  # Stop reading when another section starts
+            element = line.strip().split()[0]  # First column is the element name
+            elements.append(element)
+
+    # Use filename if formula is missing
+        if not formula:
+            formula = filename
+
+        # Convert formula (e.g., "Al2 O2") to dictionary {"Al": 2, "O": 2}
+        elem_count = defaultdict(int)
+        matches = re.findall(r'([A-Z][a-z]*)(\d*)', formula)  # Match elements and their counts
+
+        for element, count in matches:
+            elem_count[element] = int(count) if count else 1  # Default count to 1 if missing
+
+
+    nelements = len(elements)
+    cif = {
+        "lattice": (lat_a, lat_b, lat_c),
+        "angles": (ang_a, ang_b, ang_g),
+        "elem_count": dict(elem_count),
+        "elements": elements,
+        "formula": formula,
+        "nelements": nelements,
+        "filename": filename
+    }
+
+    return cif
+
+def count_elemtypes(file):
+    # Dictionary to store the highest number for each element
+    elem_type = defaultdict(int)
+
+    # Regular expression to match element symbols (with or without numbers)
+    pattern = re.compile(r'([A-Za-z]+)(\d*)')  # Matches "Al1", "O2", or just "Al", "O"
+
+    # Open the potential file
+    with open(file, 'r') as f:
+        lines = f.readlines()
+
+    # Loop through the lines in the file
+    for line in lines:
+        clean_line = line.strip()
+
+        # Skip comments and empty lines
+        if clean_line.startswith('#') or not clean_line:
+            continue
+        
+        # Split the line into components (by spaces or commas)
+        parts = clean_line.split()
+
+        # We want to count the first three elements (which are atomic species)
+        if len(parts) >= 3:
+            for element in parts[:3]:  # Check first three items in the line
+                match = pattern.match(element)
+                if match:
+                    element_name = match.group(1)  # Extract the element (e.g., "Al", "O")
+                    element_number = match.group(2)  # Extract the number if it exists
+
+                    if element_number:  # If there's a number (e.g., "Al2")
+                        element_number = int(element_number)
+                    else:  # If there's no number (e.g., "Al")
+                        element_number = 1  
+
+                    # Update the highest number for this element
+                    elem_type[element_name] = max(elem_type[element_name], element_number)
+
+    return dict(elem_type)
+
 
 def slab_generator(file,x,y,z):
 
     atomsk_command = f"atomsk {file}.cif -orthogonal-cell cif -ow -v 0"
     subprocess.run(atomsk_command, shell=True, check=True)
-    a_length, b_length, c_length = get_cell_length(file+".cif")
-    x2 = round(x/a_length)
-    y2 = round(y/b_length)
-    z2 = round(z/c_length)
+    cif = readcif(file+".cif")
+    x2 = round(x/cif["lattice"][0])
+    y2 = round(y/cif["lattice"][1])
+    z2 = round(z/cif["lattice"][2])
     atomsk_command2 = f"atomsk {file}.cif -duplicate {x2} {y2} {z2} lammps -ow -v 0"
     subprocess.run(atomsk_command2, shell=True, check=True)
 
