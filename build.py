@@ -160,104 +160,142 @@ def sheet(var):
 
     for element, cif_count in cif["elem_count"].items():
         potential_count = pot.get(element, 0)  # Get count from potential file or default to 0
-        if cif_count > 0 and potential_count != 1:  # Avoid division by zero
-            multiples[element] = potential_count / cif_count
-        else:
-            multiples[element] = None  # If the CIF count is zero (which shouldn't happen), mark as None
-        
+    if cif_count > 0 and potential_count != 1:  # Avoid division by zero
+        multiples[element] = potential_count / cif_count
+    else:
+        multiples[element] = None  # If the CIF count is zero (which shouldn't happen), mark as None
+    
     first_multiple = next(iter(multiples.values()))  # Get the first multiple
-
     for multiple in multiples.values():
         if multiple != first_multiple:  
             raise ValueError("multiples must be the same")
-    
+
     typecount = 0
-    for atomcount in pot.values:
+    for atomcount in pot.values():
         typecount += atomcount
-    
-          
+
+    print(first_multiple)     
     if os.path.exists("a.cif"):
         os.remove("a.cif")  # Delete the existing file
-
+    if os.path.exists(f"a.lmp"):
+        os.remove(f"a.lmp")  # Delete the existing file
     if os.path.exists(f"{filename}.lmp"):
         os.remove(f"{filename}.lmp")  # Delete the existing file
-
     if first_multiple == None:
-        atomsk_command = f"atomsk {filename}.cif -duplicate 2 2 1 -orthogonal-cell  -ow a.lmp"
+        atomsk_command = f"atomsk {filename}.cif -duplicate 2 2 1 -ow a.lmp"
         subprocess.run(atomsk_command, shell=True, check=True)
-
     else:
         if first_multiple ==1:
             atomsk_command = f"atomsk {filename}.cif -ow a.lmp"
             subprocess.run(atomsk_command, shell=True, check=True)
         else:
             m = np.sqrt(first_multiple)
-            atomsk_command = f"atomsk a.lmp -duplicate {m} {m} 1 -orthogonal-cell -ow a.lmp"
+            atomsk_command = f"atomsk {filename}.cif -duplicate {int(m)} {int(m)} 1 a.lmp"
             subprocess.run(atomsk_command, shell=True, check=True)
+            print("a.lmp created")
 
         with open("a.lmp", 'r') as file:
             lines = file.readlines()
-    
-            # Step 1: Update the atom types line to match pot_count
-            atom_types_line_index = None
-            for i, line in enumerate(lines):
-                if line.strip().startswith("atom types"):
-                    atom_types_line_index = i
-                    lines[i] = f"  {typecount}  atom types\n"  # Update atom types line
 
-            # Step 2: Create a dictionary of atom types from the 'Masses' section
-            atom_types = {}
-            masses_section_started = False
-            for i, line in enumerate(lines):
-                if line.strip() == "Masses":
-                    masses_section_started = True
-                    continue  # Skip the "Masses" header line
-                if masses_section_started:
-                    if line.strip() == "Atoms # atomic":  # End of the Masses section
-                        break
-                    parts = line.split()
-                    atom_type_id = parts[0]  # First column is the atom type ID (1, 2, ...)
+        modified_lines = []
+        atom_types_updated = False
+        masses_section = False
+        atoms_section = False
+        atom_type_counter = 1  # To track incremental atom type assignment
+        # Step 2: Create a dictionary of atom types from the 'Masses' section
+        atom_types = {}
+        elem2D = {}
+        for i, line in enumerate(lines):
+            stripped_line = line.strip()
+
+            # Update the "atom types" value
+            if re.match(r'^\s*\d+\s+atom types\s*$', stripped_line) and not atom_types_updated:
+                lines[i]= f"   {typecount}  atom types\n"
+                atom_types_updated = True
+                continue
+
+            if line.strip() == "Masses":
+                masses_section = True
+                continue  # Skip the "Masses" header line
+            
+            if masses_section:
+                if "Atoms" in line:
+                     # End of the Masses section
+                    break
+                
+                parts = line.split()
+                if len(parts) < 2:
+                    continue  # Skip empty lines
+                
+                try:
+                    atom_type_id = int(parts[0])  # First column is the atom type ID (1, 2, ...)
                     mass = float(parts[1])  # Second column is the mass
                     # Extract the atom type name from the comment section (after the `#`)
-                    atom_type_name = line.split("#")[-1].strip()
-                    atom_types[int(atom_type_id)] = (atom_type_name, mass)
+                    if "#" in line:
+                        atom_type_name = line.split("#")[-1].strip()
+                        lines[i]= ""
+                    else:
+                        atom_type_name = f"Unknown_{atom_type_id}"  # Fallback in case there's no comment
+                    atom_types[atom_type_id] = (atom_type_name, mass)
+                except ValueError:
+                    continue  # Skip lines that cannot be converted properly
+
+        modified_lines = set() 
+
+        for i in range(1,len(atom_types)+1):
+            atoms_section = False
+            for l, line in enumerate(lines):
+                stripped_line = line.strip()
+                if "Atoms" in line:
+                    atoms_section = True
+                    continue
+
+                if atoms_section and stripped_line and l not in modified_lines:
+                        parts = stripped_line.split()
+
+                        if parts[1] == str(i):
+                            parts[1] = str(atom_type_counter)  # Update atom type
+                            lines[l]= "  ".join(parts) + "\n"
+                            modified_lines.add(l)
+                            print(parts[1])
+                            elem2D[atom_type_counter] = atom_types[i]
+                            atom_type_counter += 1  # Increment for next line
+                            continue
+
+                        
+
+        masses_section = False
+        for i, line in enumerate(lines):
+            print(elem2D)
+            print("rewrite masses")
+            stripped_line = line.strip()
+            if line.strip() == "Masses":
+                masses_section = True
+                continue
             
-            
-            # Step 3: Modify the second column in the Atoms section
-            atoms_section_started = False
-            for i, line in enumerate(lines):
-                if line.strip() == "Atoms # atomic":
-                    atoms_section_started = True
-                    continue  # Skip the "Atoms # atomic" header line
-                if atoms_section_started:
-                    if line.strip() == "Masses":  # End of the Atoms section
-                        break
-                    parts = line.split()
-                    parts[1] = str(int(parts[1]))  # Increment the atom type index in the second column
-                    lines[i] = '  '.join(parts) + "\n"  # Join and update the line
+            if masses_section:
+                for l in range(1,len(elem2D)+1):
+                    lines[i] += f"{l} {elem2D[l][1]}  #{elem2D[l][0]}\n"
+                break
 
-            # Save the modified file
-            with open("a.lmp", 'w') as file:
-                file.writelines(lines)
+        # Save modified file
+        with open("a.lmp", 'w') as file:
+            file.writelines(lines)
+
+        if first_multiple ==1:
+            atomsk_command = f"atomsk a.lmp -duplicate 2 2 1 -ow lmp"
+            subprocess.run(atomsk_command, shell=True, check=True)
+
+        atomsk_command = f"atomsk a.lmp -orthogonal-cell -ow lmp"
+        subprocess.run(atomsk_command, shell=True, check=True)
 
 
+        dim = get_model_dimensions('a.lmp')
+        print(dim)
+        duplicate_a = round(x / dim['xhi'])
+        duplicate_b = round(y / dim['yhi'])
 
-
-                atomsk_command = f"atomsk a.lmp -duplicate 2 2 1 -orthogonal-cell -ow a.lmp"
-                subprocess.run(atomsk_command, shell=True, check=True)
-
-
-
-
-    xlo, xhi, ylo, yhi, zlo, zhi = get_model_dimensions(filename)
-    duplicate_a = round(x / xhi)
-    duplicate_b = round(y / yhi)
-
-    atomsk_command2 = f"atomsk a.lmp -duplicate {duplicate_a} {duplicate_b} 1  -ow {filename}.lmp"
-    os.remove("a.cif")
-
-    # atomsk_command = f"atomsk {filename} -duplicate 2 2 1 -cut above 0.5*BOX z -cut below 0.2*BOX z -orthogonal-cell cif -ow"
-    # atomsk_command = f"atomsk {filename} -duplicate 2 2 1 -orthogonal-cell cif -ow"
-
-
-    subprocess.run(atomsk_command2, shell=True, check=True)
+        if os.path.exists(f"{filename}.lmp"):
+            os.remove(f"{filename}.lmp")  # Delete the existing file
+        atomsk_command = f"atomsk a.lmp -duplicate {duplicate_a} {duplicate_b} 1 {filename}.lmp"
+        subprocess.run(atomsk_command, shell=True, check=True)

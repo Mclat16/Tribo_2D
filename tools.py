@@ -35,40 +35,35 @@ def matsearch(material_id):
     
 def cifread(cif):
 
+    filename = os.path.basename(cif).split('.')[0]
+
     with open(cif, 'r') as f:
         lines = f.readlines()
     
-    lat_a,lat_b,lat_c = [None]*3
     elements = []
+    dim = {}
     reading_elements = False  # Flag to start reading elements
     header_skipped =  False
     formula = None
-    filename = os.path.basename(cif).split('.')[0]
+
+    keys = {
+        '_cell_length_a': 'lat_a',
+        '_cell_length_b': 'lat_b',
+        '_cell_length_c': 'lat_c',
+        '_chemical_formula_structural': 'formula',
+        '_cell_angle_alpha': 'ang_a',
+        '_cell_angle_beta': 'ang_b',
+        '_cell_angle_gamma': 'ang_g'
+    }
 
     for line in lines:
-        if line.startswith('_cell_length_a'):
-            lat_a = float(line.split()[1])
-
-        elif line.startswith('_cell_length_b'):
-            lat_b = float(line.split()[1])
-
-        elif line.startswith('_cell_length_c'):
-            lat_c = float(line.split()[1])
-
-        elif line.startswith('_chemical_formula_structural'):
-            formula = line.split(maxsplit=1)[1].strip()
-
-        elif line.startswith('_cell_angle_alpha'):
-            ang_a = float(line.split()[1])
-
-        elif line.startswith('_cell_angle_beta'):
-            ang_b = float(line.split()[1])
-        
-        elif line.startswith('_cell_angle_gamma'):
-            ang_g = float(line.split()[1])
+        for key, var in keys.items():
+            if line.startswith(key):
+                value = line.split(maxsplit=1)[1].strip()
+                dim[var] = float(value) if 'formula' not in var else value
 
             # Detect when element section starts
-        elif line.strip().startswith('loop_'):
+        if line.strip().startswith('loop_'):
             reading_elements = True  # Start reading element symbols
             continue
             # If reading elements, first skip headers
@@ -152,9 +147,9 @@ def count_elemtypes(file):
 
 def slab_generator(file,x,y,z):
 
-    atomsk_command = f"atomsk {file}.cif -orthogonal-cell cif -ow -v 0"
+    atomsk_command = f"atomsk {file}.cif -duplicate 2 2 1 -orthogonal-cell cif -ow -v 0"
     subprocess.run(atomsk_command, shell=True, check=True)
-    cif = readcif(file+".cif")
+    cif = cifread(file+".cif")
     x2 = round(x/cif["lattice"][0])
     y2 = round(y/cif["lattice"][1])
     z2 = round(z/cif["lattice"][2])
@@ -172,8 +167,15 @@ def get_model_dimensions(lmp):
                 ylo, yhi = map(float, line.split()[0:2])
             elif "zlo zhi" in line:
                 zlo, zhi = map(float, line.split()[0:2])
-                
-    return xlo, xhi, ylo, yhi, zlo, zhi
+    dim = {
+        "xlo": xlo,
+        "xhi": xhi, 
+        "ylo": ylo, 
+        "yhi": yhi, 
+        "zlo": zlo,
+        "zhi": zhi
+    }            
+    return dim
 
 def LJparams(X,Y):
     # Lorentz-Bertholt Mixing rules for obtaining the LJ parameters between two atoms using the Universal Force Field parameters
