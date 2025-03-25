@@ -4,21 +4,14 @@ import subprocess
 import os
 import json
 from .Potentials.lj_params import lj_params
-from mpi4py import MPI
-from lammps import lammps
 import numpy as np
-from ase import io, data
-from pathlib import Path
-from CifFile import ReadCif
 import configparser
-import argparse
 import re
-from collections import defaultdict
 
 def matsearch(material_id):
     material_id = str(material_id)
     with MPRester("ASGI0EvO83K5vj5GFmdJCYOpd7qgVTAL") as mpr:
-        data = mpr.materials.summary.search(material_ids=[material_id], fields=["structure", "formula_pretty","composition_reduced",'nsites','symmetry'])
+        data = mpr.materials.summary.search(material_ids=[material_id], fields=["structure", "formula_pretty","composition_reduced"])
         formula = data[0].formula_pretty
         comp = {str(element): int(count) for element, count in data[0].composition_reduced.items()}
         elements = []
@@ -26,12 +19,26 @@ def matsearch(material_id):
             elements.extend([element] * count)
         nelements = len(elements)
         structure = data[0].structure
-        nsites = data[0].nsites
-        symmetry = data[0].symmetry
         filename = formula + ".cif"
         structure.to(filename)
 
-        return structure,formula,nelements,elements
+    cif={}
+
+    cif= {
+        'lat_a': structure.lattice.a,
+        'lat_b': structure.lattice.b,
+        'lat_c': structure.lattice.c,
+        'formula': formula,
+        'ang_a': structure.lattice.alpha,
+        'ang_b': structure.lattice.beta,
+        'ang_g': structure.lattice.gamma,
+        "elem_comp": comp,
+        "nelements": nelements,
+        "filename": filename,
+        "elements": elements
+    }
+    
+    return cif
     
 def cifread(cif):
 
@@ -41,10 +48,9 @@ def cifread(cif):
         lines = f.readlines()
     
     elements = []
-    dim = {}
+    cif = {}
     reading_elements = False  # Flag to start reading elements
     header_skipped =  False
-    formula = None
 
     keys = {
         '_cell_length_a': 'lat_a',
@@ -60,9 +66,9 @@ def cifread(cif):
         for key, var in keys.items():
             if line.startswith(key):
                 value = line.split(maxsplit=1)[1].strip()
-                dim[var] = float(value) if 'formula' not in var else value
+                cif[var] = float(value) if 'formula' not in var else value
 
-            # Detect when element section starts
+        # Detect when element section starts
         if line.strip().startswith('loop_'):
             reading_elements = True  # Start reading element symbols
             continue
@@ -74,76 +80,67 @@ def cifread(cif):
 
         # Now read element names
         if reading_elements and header_skipped:
-            if line.strip().startswith('_') or line.strip().startswith('loop_') or line.strip() == "":
-                break  # Stop reading when another section starts
             element = line.strip().split()[0]  # First column is the element name
             elements.append(element)
 
-    # Use filename if formula is missing
-        if not formula:
-            formula = filename
-
         # Convert formula (e.g., "Al2 O2") to dictionary {"Al": 2, "O": 2}
-        elem_count = defaultdict(int)
-        matches = re.findall(r'([A-Z][a-z]*)(\d*)', formula)  # Match elements and their counts
+        elem_count = {}
+        matches = re.findall(r'([A-Z][a-z]*)(\d*)', cif["formula"])  # Match elements and their counts
 
         for element, count in matches:
             elem_count[element] = int(count) if count else 1  # Default count to 1 if missing
 
 
     nelements = len(elements)
-    cif = {
-        "lattice": (lat_a, lat_b, lat_c),
-        "angles": (ang_a, ang_b, ang_g),
-        "elem_count": dict(elem_count),
-        "elements": elements,
-        "formula": formula,
+
+    cif.update = ({
+        "elements" : elements,
+        "elem_comp": elem_count,
         "nelements": nelements,
-        "filename": filename
-    }
+        "filename" : filename
+    })
 
     return cif
 
 def count_elemtypes(file):
-    # Dictionary to store the highest number for each element
-    elem_type = defaultdict(int)
 
-    # Regular expression to match element symbols (with or without numbers)
-    pattern = re.compile(r'([A-Za-z]+)(\d*)')  # Matches "Al1", "O2", or just "Al", "O"
+    elem_type = {}
+
+    matches = re.compile(r'([A-Za-z]+)(\d*)')  # Matches "Al1", "O2", or just "Al", "O"
 
     # Open the potential file
     with open(file, 'r') as f:
         lines = f.readlines()
 
-    # Loop through the lines in the file
     for line in lines:
-        clean_line = line.strip()
+        stripped_line = line.strip()
 
         # Skip comments and empty lines
-        if clean_line.startswith('#') or not clean_line:
+        if stripped_line.startswith('#') or not stripped_line:
             continue
         
         # Split the line into components (by spaces or commas)
-        parts = clean_line.split()
+        parts = stripped_line.split()
 
         # We want to count the first three elements (which are atomic species)
-        if len(parts) >= 3:
+        if len(parts) >= 2:
             for element in parts[:3]:  # Check first three items in the line
-                match = pattern.match(element)
+                match = matches.match(element)
                 if match:
                     element_name = match.group(1)  # Extract the element (e.g., "Al", "O")
                     element_number = match.group(2)  # Extract the number if it exists
 
                     if element_number:  # If there's a number (e.g., "Al2")
                         element_number = int(element_number)
+                        # Update the highest number for this element
+                        elem_type[element_name] = max(elem_type[element_name], element_number)
+
                     else:  # If there's no number (e.g., "Al")
                         element_number = 1  
+                        elem_type[element_name] = 1
+                    
 
-                    # Update the highest number for this element
-                    elem_type[element_name] = max(elem_type[element_name], element_number)
-
-    return dict(elem_type)
-
+    return elem_type
 
 def slab_generator(file,x,y,z):
 
@@ -193,52 +190,6 @@ def removeInlineComments(config):
         for item in config.items(section):
             config.set(section, item[0], item[1].split("#")[0].strip())
     return config
-
-def center(system,filename,var,natype):
-
-        lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
-        # lmp.file("lammps/in.init")
-        lmp.commands_list([
-        "units           metal\n",
-        "atom_style      atomic\n",
-        "neighbor        0.3 bin\n",
-        "boundary        p p p",
-        "neigh_modify    every 1 delay 0 check yes #every 5\n\n",
-        f"region box block {var['dim']['xlo']} {var['dim']['xhi']} {var['dim']['ylo']} {var['dim']['yhi']} -50 50\n",
-        f"create_box      {var['data'][system][2]} box\n\n",
-        # "read_data       %s/system_build/%s_%d.lmp" % (self.directory_l,self.data["2D"][1],self.layers),
-        "read_data       %s add append" % filename,
-        ])
-        
-        elem = var['data'][system][3].copy()
-
-        count = {}
-        result=[]
-        mass = []
-        for i in range(len(elem)):
-            mass=data.atomic_masses[data.atomic_numbers[elem[i]]]
-            lmp.command("mass %d %d" % (i+1, mass))
-            element = elem[i]
-            count[element] = count.get(element, 0) + 1
-            result.append(element + str(count[element]))
-        for i in range(len(elem)):
-            element = elem[i]
-            if count[element] > 1:
-                elem[i]=result[i]
-        
-        lmp.commands_list([
-        "pair_style sw",
-        "pair_coeff * * Potentials/%s.sw %s" % (var['data'][system][1], ' '.join(elem)),
-        "compute zmin all reduce min z",
-        "variable disp equal -c_zmin",
-        "thermo_style  custom step temp pe ke etotal c_zmin v_disp",
-        "run 0",
-        "displace_atoms all move 0.0 0.0 v_disp units box",
-        f"change_box all z final {var['dim']['zlo']} {var['dim']['zhi']}",
-        "run 0",
-        "write_data  %s" % filename
-        ])
-        lmp.close
 
 def read_config(input):
     config = configparser.ConfigParser()

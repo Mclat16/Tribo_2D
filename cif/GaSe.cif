@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       GaSe2Ga
+_chemical_formula_structural       Ga2Se2
 _chemical_formula_sum              "Ga2 Se2"
 _cell_length_a       3.835226546957153
 _cell_length_b       3.8352498297218545

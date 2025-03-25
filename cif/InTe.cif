@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       InTe2In
+_chemical_formula_structural       In2Te2
 _chemical_formula_sum              "In2 Te2"
 _cell_length_a       4.381200215779501
 _cell_length_b       4.381200215779501

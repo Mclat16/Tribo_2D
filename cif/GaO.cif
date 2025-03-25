@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       GaO2Ga
+_chemical_formula_structural       Ga2O2
 _chemical_formula_sum              "Ga2 O2"
 _cell_length_a       3.13592706800123
 _cell_length_b       3.1359255062060836

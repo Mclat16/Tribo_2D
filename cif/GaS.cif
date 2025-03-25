@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       GaS2Ga
+_chemical_formula_structural       Ga2S2
 _chemical_formula_sum              "Ga2 S2"
 _cell_length_a       3.6559103659133974
 _cell_length_b       3.655925519769339

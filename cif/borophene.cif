@@ -1,6 +1,6 @@
 data_image0
-_chemical_formula_structural       HHeLiBeBCNOFNeNaMg
-_chemical_formula_sum              "H1 He1 Li1 Be1 B1 C1 N1 O1 F1 Ne1 Na1 Mg1"
+_chemical_formula_structural       B12
+_chemical_formula_sum              "B12"
 _cell_length_a       5.732
 _cell_length_b       4.842
 _cell_length_c       110.0

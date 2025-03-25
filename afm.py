@@ -21,28 +21,25 @@ class afm:
     def __init__(self,input):
 
         self.var = read_config(input)
-
         self.var['data'] = {
-            '2D' :matsearch(self.var['2D']['mat']), 
+            '2D' :cifread(self.var['2D']['mat']), 
             'sub':matsearch(self.var['sub']['mat']),
             'tip':matsearch(self.var['tip']['mat']),
         }
 
         if self.var['flake']['flake'] == True:
-            self.var['data'].update({'flake':matsearch(self.var['flake']['mat'])}) 
+            self.var['data'].update({'flake':cifread(self.var['flake']['mat'])}) 
             ngroups = ngroups + 1
 
-        # Generate folder and file locations
+        # Generate folder and file locations 
+        self.var['dir'] = f"scripts/{self.var['data']['2D'][1]}/size_{self.var['2D']['x']}x_{self.var['2D']['y']}y/sub_{self.var['sub']['amorph']}{self.var['data']['sub'][1]}/tip_{self.var['tip']['amorph']}{self.var['data']['tip'][1]}_r{self.var['tip']['r']}/K{self.var['general']['temproom']}"
 
-        # self.directory = str(self.var['data']['2D'][1])+ "/size_"+ str(self.var['2D']['x']) +"x"+ str(self.var['2D']['y']) +"/sub_"+self.var['sub']['amorph']+ str(self.var['data']['sub'][1])+"/tip_"+self.var['tip']['amorph']+ str(self.var['data']['tip'][1])+ "_r"+ str(self.var['tip']['r'])+"/K"+str(self.var['general']['temproom'])
-        self.directory = f"{self.var['data']['2D'][1]}/size_{self.var['2D']['x']}x_{self.var['2D']['y']}y/sub_{self.var['sub']['amorph']}{self.var['data']['sub'][1]}/tip_{self.var['tip']['amorph']}{self.var['data']['tip'][1]}_r{self.var['tip']['r']}/K{self.var['general']['temproom']}"
-        self.var['dir'] = self.directory
+        self.scripts = self.var['dir'] + "/scripts/"
 
-        self.scripts = self.directory + "/scripts/"
-        Path(self.directory +"/visuals").mkdir(parents=True, exist_ok=True)
-        Path(self.directory +"/results").mkdir(parents=True, exist_ok=True)
-        Path(self.directory + "/system_build").mkdir(parents=True, exist_ok=True)
-        Path(self.directory + "/potentials").mkdir(parents=True, exist_ok=True)
+        Path(self.var['dir'] +"/visuals").mkdir(parents=True, exist_ok=True)
+        Path(self.var['dir'] +"/results").mkdir(parents=True, exist_ok=True)
+        Path(self.var['dir'] + "/system_build").mkdir(parents=True, exist_ok=True)
+        Path(self.var['dir'] + "/potentials").mkdir(parents=True, exist_ok=True)
         Path(self.scripts).mkdir(parents=True, exist_ok=True)
         with open(self.scripts + "/list_system", 'w'):
             pass
@@ -54,16 +51,16 @@ class afm:
         self.var['ngroups'] = {}
         
         for l in self.var['2D']['layers']:
-            directory_l = self.directory+"/l_"+ str(l)
+            directory_l = self.var['dir']+"/l_"+ str(l)
             Path(directory_l + "/data").mkdir(parents=True, exist_ok=True)
             Path(directory_l +"/lammps").mkdir(parents=True, exist_ok=True)
-            self.elem2D,self.natype = build2D(self.var,l)
-            self.var['ngroups'][l] = self.natype*l + self.var['data']['sub'][2]*3 + self.var['data']['tip'][2]*3
+            self.elem2D = sheet(self.var,l)
+            self.natype = len(self.elem2D)
+            self.var['ngroups'][l] = self.natype*l + self.var['data']['sub']['nelements']*3 + self.var['data']['tip']['nelements']*3
             
 
-        self.var['dim'] = {}
-        file = self.directory + "/system_build/" + str(self.var['data']['2D'][1]) + "_" + str(self.var['2D']['layers'][0]) +".lmp"
-        self.var['dim']['xlo'], self.var['dim']['xhi'], self.var['dim']['ylo'], self.var['dim']['yhi'], self.var['dim']['zlo'], self.var['dim']['zhi'] = get_model_dimensions(file)
+        file = f"{self.var['dir']}/system_build/{str(self.var['data']['2D'][1])}_{str(self.var['2D']['layers'][0])}.lmp"
+        self.var['dim']= get_model_dimensions(file)
         self.scan_angle = np.arange(self.var['tip']['scan_angle'][0],self.var['tip']['scan_angle'][1]+1,self.var['tip']['scan_angle'][2])
 
         self.dump_load = [self.var['general']['force'][i] for i in range(4, len(self.var['general']['force']), 5)]
@@ -74,18 +71,15 @@ class afm:
 
     def system(self):
         for layer in self.var['2D']['layers']:
-            directory_l = self.directory+"/l_"+ str(layer)
+            directory_l = self.var['dir']+"/l_"+ str(layer)
 
-            [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['data']['2D'][0].lattice.c*(layer-1)/2]# Tip placement
+            [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['data']['2D']['lat_c']*(layer-1)/2]# Tip placement
             tip_h       = round(self.var['tip']['r']*0.52)
-            flake_z     = 17 + self.var['data']['2D'][0].lattice.c*layer/2
+            flake_z     = 17 + self.var['data']['2D']['lat_c']*layer/2
             tipt        = tip_z+tip_h-3
-            h_2D        = 10+self.var['data']['2D'][0].lattice.c/3
+            h_2D        = 10+self.var['data']['2D']['lat_c']/3
             tip_c_bot   = tipt-2
             tip_c_max   = tipt   
-
-            file = f"{self.directory}/system_build/{self.var['data']['2D'][1]}_{layer}.lmp"
-            # center('2D',file,self.var)
 
             filename = directory_l +"/lammps/" + "system.lmp"
             with open(self.scripts + "/list_system", 'a') as f:
@@ -97,9 +91,9 @@ class afm:
                     f"region box block {self.var['dim']['xlo']} {self.var['dim']['xhi']} {self.var['dim']['ylo']} {self.var['dim']['yhi']} -5 100\n",
                     f"create_box      {self.var['ngroups'][layer]} box\n\n",
                     "#----------------- Read data files -----------------------\n\n",
-                    f"read_data       {self.directory}/system_build/sub.lmp add append group sub\n",
-                    f"read_data       {self.directory}/system_build/tip.lmp add append shift {tip_x} {tip_y} {tip_z}  group tip\n",
-                    f"read_data       {self.directory}/system_build/{self.var['data']['2D'][1]}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D\n\n"
+                    f"read_data       {self.var['dir']}/system_build/sub.lmp add append group sub\n",
+                    f"read_data       {self.var['dir']}/system_build/tip.lmp add append shift {tip_x} {tip_y} {tip_z}  group tip\n",
+                    f"read_data       {self.var['dir']}/system_build/{self.var['data']['2D']['filename']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D\n\n"
                 ])
                 for t in range(max(self.var['data']['sub'][2],self.var['data']['tip'][2],self.natype)):
                     t+=1
@@ -109,7 +103,7 @@ class afm:
                 i = 1
                 if self.var['flake']['flake'] == True:
                     group.append("flake")
-                    f.write(f"\nread_data       {self.directory}/system_build/{self.var['data']['2D'][1]}_flake.data add append shift 25.83 24.1447882575101 {flake_z} group flake\n" )
+                    f.write(f"\nread_data       {self.var['dir']}/system_build/{self.var['data']['2D'][1]}_flake.data add append shift 25.83 24.1447882575101 {flake_z} group flake\n" )
                 
 
                 # Identify atom regions
@@ -131,25 +125,21 @@ class afm:
 
                 # Define sub groups and atom types
                 for g in ('sub','tip'):
-                    for t in range(self.var['data'][g][2]):
+                    for t in range(self.var['data'][g]['nelements']):
                         t+=1
                         f.writelines([
                         f"group {g}_{t} intersect {g} type_{t}\n",
                         f"set group {g}_{t} type {i}\n",
-                        ])
-                        i+=1
-                        f.writelines([
+
                         f"group {g}_fix_{t} intersect {g}_fix type_{t}\n",
-                        f"set group {g}_fix_{t} type {i}\n",
-                        f"group {g}_fix_{t} delete\n\n"
-                        ])
-                        i+=1
-                        f.writelines([
+                        f"set group {g}_fix_{t} type {i+1}\n",
+                        f"group {g}_fix_{t} delete\n\n",
+
                         f"group {g}_thermo_{t} intersect {g}_thermo type_{t}\n",
-                        f"set group {g}_thermo_{t} type {i}\n",
+                        f"set group {g}_thermo_{t} type {i+2}\n",
                         f"group {g}_thermo_{t} delete\n\n"
                         ])
-                        i+=1
+                        i+=3
                         f.write(f"group {g}_{t} delete\n\n")
                         
                 for t in range(self.natype):
@@ -161,8 +151,8 @@ class afm:
                     i+=1
                     for l in range(layer):
                         l+=1
-                        zlo= h_2D + l*self.var['data']['2D'][0].lattice.c/2 -1
-                        zhi= zlo + self.var['data']['2D'][0].lattice.c/2
+                        zlo= h_2D + l*self.var['data']['2D']['lat_c']/2 -1
+                        zhi= zlo + self.var['data']['2D']['lat_c']/2
                         f.writelines([
                         f"region layer_{l} block INF INF INF INF {zlo} {zhi} units box\n",
                         f"group layer_{l} region layer_{l} \n",
@@ -183,7 +173,7 @@ class afm:
                 "# Apply potentials\n\n",
                 f"include        {directory_l}/lammps/system.in.settings\n\n",
                 "#----------------- Create visualisation files ------------\n\n",
-                f"dump            sys all atom 100 ./{self.directory}/visuals/system_{layer}.lammpstrj\n\n",
+                f"dump            sys all atom 100 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
                 "#----------------- Minimize the system -------------------\n\n"
                 "min_style       cg\n",
                 "minimize        1.0e-4 1.0e-8 1000000 1000000\n\n",
@@ -259,7 +249,7 @@ class afm:
                 
     def load(self):
         for layer in self.var['2D']['layers']:
-            directory_l = self.directory+"/l_"+ str(layer)
+            directory_l = self.var['dir']+"/l_"+ str(layer)
             for force in self.var['general']['force']:
                 dump = False
                 if force in self.dump_load:
@@ -278,7 +268,7 @@ class afm:
 
                     # CHANGE THIS BIT
                     if dump == True:
-                        f.write(f"dump            sys all atom 100 ./{self.directory}/visuals/load_{force}N_l{layer}.lammpstrj\n\n",)
+                        f.write(f"dump            sys all atom 100 ./{self.var['dir']}/visuals/load_{force}N_l{layer}.lammpstrj\n\n",)
 
 
                     f.writelines([
@@ -353,7 +343,7 @@ class afm:
         tipps = self.var['tip']['s']/100 # in A/ps
 
         for layer in self.var['2D']['layers']:
-            directory_l = self.directory+"/l_"+ str(layer)
+            directory_l = self.var['dir']+"/l_"+ str(layer)
             for force in self.var['general']['force']:
                 
                 if force == self.var['tip']['scan_angle'][3]:
@@ -384,7 +374,7 @@ class afm:
                         ])
                         #CHANGE THIS
                         if dump == True:
-                            f.write(f"dump            sys all atom 100 ./{self.directory}/visuals/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n")
+                            f.write(f"dump            sys all atom 100 ./{self.var['dir']}/visuals/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n")
                         
                         f.writelines([
                         
@@ -416,7 +406,7 @@ class afm:
                         "variable        fz_tip   equal  f_forcetip[3]*1.602176565\n\n",
                         "variable        fx_spr   equal  f_spr[1]*1.602176565\n\n",
                         "variable        fy_spr   equal f_spr[2]*1.602176565\n\n",
-                        f"fix             fc_ave all ave/time 1 1000 1000 v_fz_tip v_fx_spr v_fy_spr file ./{self.directory}/results/fc_ave_slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}\n\n",
+                        f"fix             fc_ave all ave/time 1 1000 1000 v_fz_tip v_fx_spr v_fy_spr file ./{self.var['dir']}/results/fc_ave_slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}\n\n",
                         "##########################################################\n",
                         "#---------------------Spring Loading---------------------#\n",
                         "##########################################################\n\n",
@@ -424,13 +414,12 @@ class afm:
                         f"fix             damp tip_fix viscous {DspringeV}\n\n",
                         "#------------------Add lateral harmonic spring------------\n\n",
                         f"fix             spr tip_fix smd cvel {springeV} {tipps} tether {spring_x} {spring_y} NULL 0.0\n\n",
-                        "run 50000\n\n",
-                        # "unfix spr\n\n",
-                        # "variable        fx_spr   equal  0\n",
-                        # "run 10000\n\n",
-                        # "variable        fx_spr   equal  f_spr2[1]*1.602176565\n",
-                        # f"fix             spr2 tip_fix smd cvel  {springeV} {tipps} tether -{spring_x} -{spring_y} NULL 0.0\n\n",
-                        # "run 50000\n",
+                        "run 200000\n\n",
+                        "unfix spr\n\n",
+                        "variable        fx_spr   equal  0\n",
+                        "run 100000\n\n",
+                        f"fix             spr tip_fix smd cvel  {springeV} {tipps} tether -{spring_x} -{spring_y} NULL 0.0\n\n",
+                        "run 200000\n",
                         f"write_data {directory_l}/data/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms.data"
                         ])
     
@@ -445,10 +434,9 @@ class afm:
                 group.append("flake")
 
             
-            sub_elem = self.var['data']['sub'][3].copy()
-            tip_elem = self.var['data']['tip'][3].copy()
-            twoD_elem = self.elem2D.copy()
-            # twod_elem = self.var['data']['2D'][3].copy()
+            sub_elem = self.var['data']['sub']['elements'].copy()
+            tip_elem = self.var['data']['tip']['elements'].copy()
+            twoD_elem = [str(sublist[0]) for sublist in self.elem2D]
             elems = [sub_elem,tip_elem,twoD_elem]
 
             # number elements
@@ -474,8 +462,8 @@ class afm:
             for g in group:
 
                 if g == 'sub' or g == 'tip':
-                    for t in range(self.var['data'][g][2]):
-                        m = self.var['data'][g][3][t]
+                    for t in range(self.var['data'][g]['nelements']):
+                        m = self.var['data'][g]['elements'][t]
                         group_def.update({
                             i:   [f"{g}_b_t{t+1}", str(i+1), str(m), sub_elem[t]],
                             i+1: [f"{g}_fix_t{t+1}", str(i+2), str(m), sub_elem[t]],
@@ -493,7 +481,7 @@ class afm:
                             i+=1
                             elemgroup[g][l][m].append(i)
 
-                for m in self.var['data'][g][3]: 
+                for m in self.var['data'][g]['elements']: 
                     mass=data.atomic_masses[data.atomic_numbers[m]] 
                     if g =='2D':
                         f.write(f"mass {elemgroup[g][0][m][0]}*{elemgroup[g][-1][m][-1]} {mass} #{m} layer {l+1}\n")
@@ -526,10 +514,10 @@ class afm:
             for key in group:
                 if key == '2D':
                     for l in range(layer):  
-                        f.write(f"pair_coeff * * sw {i} {self.directory}/potentials/{self.var['data'][key][1]}.sw {potentials[key][l]} # interlayer {key.capitalize()} Layer {l+1}\n")
+                        f.write(f"pair_coeff * * sw {i} {self.var['dir']}/potentials/{self.var['data'][key]['formula']}.sw {potentials[key][l]} # interlayer {key.capitalize()} Layer {l+1}\n")
                         i += 1 
                 else:
-                    f.write(f"pair_coeff * * sw {i} {self.directory}/potentials/{self.var['data'][key][1]}.sw {potentials[key]} # interlayer {key.capitalize()}\n")
+                    f.write(f"pair_coeff * * sw {i} {self.var['dir']}/potentials/{self.var['data'][key]['formula']}.sw {potentials[key]} # interlayer {key.capitalize()}\n")
                     i += 1 
 
 
@@ -543,13 +531,13 @@ class afm:
             ############ COPY POTENTIALS TO FILE
             
             # file = [Path(__file__).parent / f"potentials/{self.var['data']['2D'][1]}.sw",Path(__file__).parent / f"potentials/{self.var['data']['tip'][1]}.sw",Path(__file__).parent / f"potentials/{self.var['data']['sub'][1]}.sw"]
-            # shutil.copy2(file, self.directory / 'potentials')
+            # shutil.copy2(file, self.var['dir'] / 'potentials')
 
             #Consider LabelMaps to reduce amount of lines but doesn't really matter
             
-            for t in self.var['data']['2D'][3]:    
+            for t in self.var['data']['2D']['elements']:    
                 for key in ('sub','tip'):
-                    for s in self.var['data'][key][3]:
+                    for s in self.var['data'][key]['elements']:
                         e,sigma = LJparams(t,s)
                         if len(elemgroup['2D'][t]) == 1 and layer == 1:
                             f.write(f"pair_coeff {elemgroup[key][t][0]}*{elemgroup[key][t][-1]} {elemgroup['2D'][0][t][0]} lj/cut {e} {sigma}\n")
@@ -557,13 +545,13 @@ class afm:
                             f.write(f"pair_coeff {elemgroup[key][t][0]}*{elemgroup[key][t][-1]} {elemgroup['2D'][0][t][0]}*{elemgroup['2D'][-1][t][-1]} lj/cut {e} {sigma}\n")
 
             
-            for s in self.var['data']['sub'][3]:
-                for t in self.var['data']['tip'][3]:
+            for s in self.var['data']['sub']['elements']:
+                for t in self.var['data']['tip']['elements']:
                     e,sigma = LJparams(s,t)
                     f.write(f"pair_coeff {elemgroup['sub'][t][0]}*{elemgroup['sub'][t][-1]} {elemgroup['tip'][t][0]}*{elemgroup['tip'][t][-1]}  lj/cut {e} {sigma} \n")
                     
                 if layer>1:
-                    for s in self.var['data']['2D'][3]:
+                    for s in self.var['data']['2D']['elements']:
                         e,sigma = LJparams(s,t)
 
                         for l in range(1,layer):
@@ -610,10 +598,10 @@ class afm:
 
                     "# $PBS_O_WORKDIR is the directory where the pbs script was sent from. Copy everything from the work directory to the temporary directory to prepare for the run\n\n",
 
-                    f"mpiexec lmp -l {self.data['2D'][1]}/${PBS_log}.log -in $(sed -n {PBS} {self.directory}/scripts/list_{type})\n\n",
+                    f"mpiexec lmp -l {self.data['2D'][1]}/${PBS_log}.log -in $(sed -n {PBS} {self.var['dir']}/scripts/list_{type})\n\n",
 
                     # "#After the end of the run copy everything back to the parent directory\n",
-                    # f"cp -r ./{self.directory}/ $PBS_O_WORKDIR/{self.directory}\n\n"
+                    # f"cp -r ./{self.var['dir']}/ $PBS_O_WORKDIR/{self.var['dir']}\n\n"
                 ])
 
         filename = self.scripts + self.data['2D'][1] + "_transfer.pbs"
@@ -628,9 +616,9 @@ class afm:
                 "cd $HOME\n",
                 f"mkdir -p logs_{self.data['2D'][1]}/\n\n",
                 "cd $EPHEMERAL\n",
-                f"mkdir -p {self.directory}/\n\n",
+                f"mkdir -p {self.var['dir']}/\n\n",
 
-                f"cp -r $PBS_O_WORKDIR/{self.directory}/* {self.directory}\n",
+                f"cp -r $PBS_O_WORKDIR/{self.var['dir']}/* {self.var['dir']}\n",
                 "cp -r $PBS_O_WORKDIR/Potentials/ .\n"
             ])
 
@@ -645,7 +633,7 @@ class afm:
 
                 "cd $EPHEMERAL\n",
                 "#After the end of the run copy everything back to the parent directory\n",
-                f"cp -r ./{self.directory}/* $PBS_O_WORKDIR/{self.directory}\n\n"
+                f"cp -r ./{self.var['dir']}/* $PBS_O_WORKDIR/{self.var['dir']}\n\n"
             ])
 
 # if __name__ == '__main__':

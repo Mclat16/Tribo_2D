@@ -9,7 +9,7 @@ _cell_angle_beta   90.00000000
 _cell_angle_gamma   120.00000000
 _symmetry_Int_Tables_number   1
 _chemical_formula_structural   Ge
-_chemical_formula_sum   Ge4
+_chemical_formula_sum   Ge2
 _cell_volume   156.19166121
 _cell_formula_units_Z   4
 loop_

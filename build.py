@@ -1,20 +1,10 @@
 from .tools import *
 from .settings import *
-from .materials import *
-
-from mp_api.client import MPRester
-import sys
+from ase import data
 import subprocess
 import os
-import json
-from mpi4py import MPI
 from lammps import lammps
 import numpy as np
-from ase import io, data
-from pathlib import Path
-from CifFile import ReadCif
-import configparser
-import argparse
 
 def tip(var):
         
@@ -26,8 +16,7 @@ def tip(var):
     side = round(2*var['tip']['r']/2.5)
     
     if var['tip']['amorph'] == 'a':
-        
-        am_filename = Path(__file__).parent / f"materials/amor_{filename}"
+        am_filename = os.path.join(os.path.dirname(__file__), "materials", f"amor_{filename}")
             
         if os.path.exists(am_filename):
             print("File exists")
@@ -68,7 +57,7 @@ def sub(var):
     
     if var['sub']['amorph'] == 'a':
         
-        am_filename = Path(__file__).parent / f"materials/amor_{filename}"
+        am_filename = os.path.join(os.path.dirname(__file__), "materials", f"amor_{filename}")
             
         if os.path.exists(am_filename):
             print("File exists")
@@ -153,28 +142,31 @@ def sheet(var):
 
     filename = var['2D'][0]
 
-    cif = cifread(filename +".cif")
-    pot = count_elemtypes(f"{filename.lower()}/{filename.lower()}.sw")
+    cif = cifread(f"cif/{filename}.cif")
+    pot = count_elemtypes(f"Potentials/{filename.lower()}/{filename.lower()}.sw")
 
     multiples = {}
 
     for element, cif_count in cif["elem_count"].items():
         potential_count = pot.get(element, 0)  # Get count from potential file or default to 0
-    if cif_count > 0 and potential_count != 1:  # Avoid division by zero
-        multiples[element] = potential_count / cif_count
-    else:
-        multiples[element] = None  # If the CIF count is zero (which shouldn't happen), mark as None
+        if cif_count > 0 and potential_count != 1:  # Avoid division by zero
+            multiples[element] = potential_count / cif_count
+        else:
+            multiples[element] = None  # If the CIF count is zero (which shouldn't happen), mark as None
     
     first_multiple = next(iter(multiples.values()))  # Get the first multiple
     for multiple in multiples.values():
         if multiple != first_multiple:  
-            raise ValueError("multiples must be the same")
+            if multiple == None and first_multiple == 1 or multiple == 1 and first_multiple== None:
+                first_multiple==1
+            else:
+                raise ValueError("multiples must be the same")
+
 
     typecount = 0
     for atomcount in pot.values():
         typecount += atomcount
-
-    print(first_multiple)     
+  
     if os.path.exists("a.cif"):
         os.remove("a.cif")  # Delete the existing file
     if os.path.exists(f"a.lmp"):
@@ -182,26 +174,25 @@ def sheet(var):
     if os.path.exists(f"{filename}.lmp"):
         os.remove(f"{filename}.lmp")  # Delete the existing file
     if first_multiple == None:
-        atomsk_command = f"atomsk {filename}.cif -duplicate 2 2 1 -ow a.lmp"
+        atomsk_command = f"echo n | atomsk {filename}.cif -duplicate 2 2 1 -ow a.lmp -v 0"
         subprocess.run(atomsk_command, shell=True, check=True)
     else:
         if first_multiple ==1:
-            atomsk_command = f"atomsk {filename}.cif -ow a.lmp"
+            atomsk_command = f"echo n | atomsk {filename}.cif -ow a.lmp -v 0"
             subprocess.run(atomsk_command, shell=True, check=True)
         else:
             m = np.sqrt(first_multiple)
-            atomsk_command = f"atomsk {filename}.cif -duplicate {int(m)} {int(m)} 1 a.lmp"
+            atomsk_command = f"echo n | atomsk {filename}.cif -duplicate {int(m)} {int(m)} 1 a.lmp -v 0"
             subprocess.run(atomsk_command, shell=True, check=True)
-            print("a.lmp created")
 
         with open("a.lmp", 'r') as file:
             lines = file.readlines()
 
         modified_lines = []
-        atom_types_updated = False
         masses_section = False
         atoms_section = False
         atom_type_counter = 1  # To track incremental atom type assignment
+
         # Step 2: Create a dictionary of atom types from the 'Masses' section
         atom_types = {}
         elem2D = {}
@@ -209,9 +200,8 @@ def sheet(var):
             stripped_line = line.strip()
 
             # Update the "atom types" value
-            if re.match(r'^\s*\d+\s+atom types\s*$', stripped_line) and not atom_types_updated:
+            if re.match(r'^\s*\d+\s+atom types\s*$', stripped_line):
                 lines[i]= f"   {typecount}  atom types\n"
-                atom_types_updated = True
                 continue
 
             if line.strip() == "Masses":
@@ -262,13 +252,8 @@ def sheet(var):
                             atom_type_counter += 1  # Increment for next line
                             continue
 
-                        
-
         masses_section = False
         for i, line in enumerate(lines):
-            print(elem2D)
-            print("rewrite masses")
-            stripped_line = line.strip()
             if line.strip() == "Masses":
                 masses_section = True
                 continue
@@ -282,20 +267,87 @@ def sheet(var):
         with open("a.lmp", 'w') as file:
             file.writelines(lines)
 
-        if first_multiple ==1:
-            atomsk_command = f"atomsk a.lmp -duplicate 2 2 1 -ow lmp"
-            subprocess.run(atomsk_command, shell=True, check=True)
-
-        atomsk_command = f"atomsk a.lmp -orthogonal-cell -ow lmp"
+    if first_multiple == 1:
+        atomsk_command = f"echo n | atomsk a.lmp -duplicate 2 2 1 -ow lmp -v 0"
         subprocess.run(atomsk_command, shell=True, check=True)
 
+    atomsk_command = f"atomsk a.lmp -orthogonal-cell -ow lmp -v 0"
+    subprocess.run(atomsk_command, shell=True, check=True)
 
-        dim = get_model_dimensions('a.lmp')
-        print(dim)
-        duplicate_a = round(x / dim['xhi'])
-        duplicate_b = round(y / dim['yhi'])
 
-        if os.path.exists(f"{filename}.lmp"):
-            os.remove(f"{filename}.lmp")  # Delete the existing file
-        atomsk_command = f"atomsk a.lmp -duplicate {duplicate_a} {duplicate_b} 1 {filename}.lmp"
-        subprocess.run(atomsk_command, shell=True, check=True)
+    dim = get_model_dimensions('a.lmp')
+    duplicate_a = round(x / dim['xhi'])
+    duplicate_b = round(y / dim['yhi'])
+
+    if os.path.exists(f"{filename}.lmp"):
+        os.remove(f"{filename}.lmp")  # Delete the existing file
+    atomsk_command = f"atomsk a.lmp -duplicate {duplicate_a} {duplicate_b} 1 {filename}_1.lmp -v 0"
+    subprocess.run(atomsk_command, shell=True, check=True)
+
+    os.remove("a.cif")
+    os.remove("a.lmp")
+    filename = f"{var['2D'][0]}_1.lmp"
+    center('2D',filename,var,elem2D)
+    return elem2D
+
+def stacking(var, layers):
+    lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
+    # lmp.file("lammps/in.init")
+    lmp.commands_list([
+
+    ])
+
+
+def center(system,filename,var,elements):
+
+    
+    lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
+    # lmp.file("lammps/in.init")
+    lmp.commands_list([
+    "units           metal\n",
+    "atom_style      atomic\n",
+    "neighbor        0.3 bin\n",
+    "boundary        p p p",
+    "neigh_modify    every 1 delay 0 check yes #every 5\n\n",
+    f"region box block {var['dim']['xlo']} {var['dim']['xhi']} {var['dim']['ylo']} {var['dim']['yhi']} -50 50\n",
+    f"create_box      {len(elem)} box\n\n",
+    # "read_data       %s/system_build/%s_%d.lmp" % (self.directory_l,self.data["2D"][1],self.layers),
+    "read_data       %s add append" % filename,
+    ])
+    
+    elem = elements.copy()
+    count = {}
+    result=[]
+    mass = []
+    for i in range(len(elem)):
+        mass=data.atomic_masses[data.atomic_numbers[elem[i]]]
+        lmp.command("mass %d %d" % (i+1, mass))
+        element = elem[i]
+        count[element] = count.get(element, 0) + 1
+        result.append(element + str(count[element]))
+    for i in range(len(elem)):
+        element = elem[i]
+        if count[element] > 1:
+            elem[i]=result[i]
+    
+    lmp.commands_list([
+    "pair_style sw",
+    "pair_coeff * * Potentials/%s.sw %s" % (var['data'][system]["filename"], ' '.join(elem)),
+
+    "compute zmin all reduce min z",
+    "compute xmin all reduce min x",
+    "compute ymin all reduce min y",
+    
+    "variable disp_z equal -c_zmin",
+    "variable disp_x equal -(c_xmin + (xhi-xlo)/2.0)",
+    "variable disp_y equal -(c_ymin + (yhi-ylo)/2.0)",
+    
+    "run 0",
+
+    "displace_atoms all move v_disp_x v_disp_y v_disp_z units box",
+
+    f"change_box all z final {var['dim']['zlo']} {var['dim']['zhi']}",
+    "run 0",
+    "write_data  %s" % filename
+    ])
+    lmp.close

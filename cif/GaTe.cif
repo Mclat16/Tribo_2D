@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       GaTe2Ga
+_chemical_formula_structural       Ga2Te2
 _chemical_formula_sum              "Ga2 Te2"
 _cell_length_a       4.1484785786656655
 _cell_length_b       4.148540873519473

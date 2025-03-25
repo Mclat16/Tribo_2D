@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       InSe2In
+_chemical_formula_structural       In2Se2
 _chemical_formula_sum              "In2 Se2"
 _cell_length_a       4.084707126435653
 _cell_length_b       4.084707126435653
