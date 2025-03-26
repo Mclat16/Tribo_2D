@@ -86,13 +86,13 @@ def cifread(cif):
         elem_count[element] = int(count) if count else 1  # Default count to 1 if missing
     nelements = len(elements)
 
-    cif.update = ({
+    cif.update({
         "elements" : elements,
         "elem_comp": elem_count,
         "nelements": nelements,
         "filename" : filename
     })
-    
+
     return cif
 
 def count_elemtypes(file):
