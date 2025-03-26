@@ -49,9 +49,8 @@ def cifread(cif):
     
     elements = []
     cif = {}
-    reading_elements = False 
+    reading_elements = False  # Flag to start reading elements
     header_skipped =  False
-
     keys = {
         '_cell_length_a': 'lat_a',
         '_cell_length_b': 'lat_b',
@@ -67,7 +66,6 @@ def cifread(cif):
             if line.startswith(key):
                 value = line.split(maxsplit=1)[1].strip()
                 cif[var] = float(value) if 'formula' not in var else value
-        print(cif)
         # Detect when element section starts
         if line.strip().startswith('_atom_site_type_symbol'):
             reading_elements = True  # Start reading element symbols
@@ -77,11 +75,10 @@ def cifread(cif):
             if line.strip().startswith('_'):  # These are column headers
                 continue  # Skip header lines
             header_skipped = True  # Once we hit real data, stop skipping
-
         # Now read element names
         if reading_elements and header_skipped:
             element = line.strip().split()[0]  # First column is the element name
-            elements.append(element)
+            elements.append(element)# First column is the element name
     
     elem_count = {}
     matches = re.findall(r'([A-Z][a-z]*)(\d*)', cif['formula'])  # Match elements and their count
@@ -95,7 +92,7 @@ def cifread(cif):
         "nelements": nelements,
         "filename" : filename
     })
-
+    
     return cif
 
 def count_elemtypes(file):
