@@ -67,7 +67,7 @@ def cifread(cif):
             if line.startswith(key):
                 value = line.split(maxsplit=1)[1].strip()
                 cif[var] = float(value) if 'formula' not in var else value
-
+        print(cif)
         # Detect when element section starts
         if line.strip().startswith('loop_'):
             reading_elements = True  # Start reading element symbols
@@ -121,7 +121,7 @@ def count_elemtypes(file):
         parts = stripped_line.split()
 
         # We want to count the first three elements (which are atomic species)
-        if len(parts) >= 2:
+        if len(parts) >= 3:
             for element in parts[:3]:  # Check first three items in the line
                 match = matches.match(element)
                 if match:
@@ -130,12 +130,15 @@ def count_elemtypes(file):
 
                     if element_number:  # If there's a number (e.g., "Al2")
                         element_number = int(element_number)
-                        # Update the highest number for this element
-                        elem_type[element_name] = max(elem_type[element_name], element_number)
-
+                                                
                     else:  # If there's no number (e.g., "Al")
                         element_number = 1  
-                        elem_type[element_name] = 1
+
+                    if element_name not in elem_type:
+                        elem_type[element_name] = 0  
+                    
+                    
+                    elem_type[element_name] = max(elem_type[element_name], element_number)
                     
 
     return elem_type
