@@ -49,7 +49,7 @@ def cifread(cif):
     
     elements = []
     cif = {}
-    reading_elements = False  # Flag to start reading elements
+    reading_elements = False 
     header_skipped =  False
 
     keys = {
@@ -82,15 +82,13 @@ def cifread(cif):
         if reading_elements and header_skipped:
             element = line.strip().split()[0]  # First column is the element name
             elements.append(element)
-
-        # Convert formula (e.g., "Al2 O2") to dictionary {"Al": 2, "O": 2}
-        elem_count = {}
-        matches = re.findall(r'([A-Z][a-z]*)(\d*)', cif["formula"])  # Match elements and their counts
-
-        for element, count in matches:
-            elem_count[element] = int(count) if count else 1  # Default count to 1 if missing
-
-
+            # Convert formula (e.g., "Al2 O2") to dictionary {"Al": 2, "O": 2}
+    
+    
+    elem_count = {}
+    matches = re.findall(r'([A-Z][a-z]*)(\d*)', cif['formula'])  # Match elements and their count
+    for element, count in matches:
+        elem_count[element] = int(count) if count else 1  # Default count to 1 if missing
     nelements = len(elements)
 
     cif.update = ({
