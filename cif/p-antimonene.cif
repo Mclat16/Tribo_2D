@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       Sb
+_chemical_formula_structural       Sb8
 _chemical_formula_sum              "Sb8"
 _cell_length_a       9.46
 _cell_length_b       4.36

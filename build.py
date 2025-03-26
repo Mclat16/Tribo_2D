@@ -158,7 +158,7 @@ def sheet(var):
     for multiple in multiples.values():
         if multiple != first_multiple:  
             if multiple == None and first_multiple == 1 or multiple == 1 and first_multiple== None:
-                first_multiple==1
+                first_multiple=1
             else:
                 raise ValueError("multiples must be the same")
 
@@ -230,42 +230,46 @@ def sheet(var):
                 except ValueError:
                     continue  # Skip lines that cannot be converted properly
 
-        modified_lines = set() 
 
-        for i in range(1,len(atom_types)+1):
-            atoms_section = False
-            for l, line in enumerate(lines):
-                stripped_line = line.strip()
-                if "Atoms" in line:
-                    atoms_section = True
+        if first_multiple == None:    
+            elem2D= atom_types
+        else:    
+            modified_lines = set() 
+        
+            for i in range(1,len(atom_types)+1):
+                atoms_section = False
+                for l, line in enumerate(lines):
+                    stripped_line = line.strip()
+                    if "Atoms" in line:
+                        atoms_section = True
+                        continue
+
+                    if atoms_section and stripped_line and l not in modified_lines:
+                            parts = stripped_line.split()
+
+                            if parts[1] == str(i):
+                                parts[1] = str(atom_type_counter)  # Update atom type
+                                lines[l]= "  ".join(parts) + "\n"
+                                modified_lines.add(l)
+                                print(parts[1])
+                                elem2D[atom_type_counter] = atom_types[i]
+                                atom_type_counter += 1  # Increment for next line
+                                continue
+
+            masses_section = False
+            for i, line in enumerate(lines):
+                if line.strip() == "Masses":
+                    masses_section = True
                     continue
-
-                if atoms_section and stripped_line and l not in modified_lines:
-                        parts = stripped_line.split()
-
-                        if parts[1] == str(i):
-                            parts[1] = str(atom_type_counter)  # Update atom type
-                            lines[l]= "  ".join(parts) + "\n"
-                            modified_lines.add(l)
-                            print(parts[1])
-                            elem2D[atom_type_counter] = atom_types[i]
-                            atom_type_counter += 1  # Increment for next line
-                            continue
-
-        masses_section = False
-        for i, line in enumerate(lines):
-            if line.strip() == "Masses":
-                masses_section = True
-                continue
-            
-            if masses_section:
-                for l in range(1,len(elem2D)+1):
-                    lines[i] += f"{l} {elem2D[l][1]}  #{elem2D[l][0]}\n"
-                break
-
-        # Save modified file
-        with open("a.lmp", 'w') as file:
-            file.writelines(lines)
+                
+                if masses_section:
+                    for l in range(1,len(elem2D)+1):
+                        lines[i] += f"{l} {elem2D[l][1]}  #{elem2D[l][0]}\n"
+                    break
+                
+            # Save modified file
+            with open("a.lmp", 'w') as file:
+                file.writelines(lines)
 
     if first_multiple == 1:
         atomsk_command = f"echo n | atomsk a.lmp -duplicate 2 2 1 -ow lmp -v 0"
