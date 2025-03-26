@@ -69,7 +69,7 @@ def cifread(cif):
                 cif[var] = float(value) if 'formula' not in var else value
         print(cif)
         # Detect when element section starts
-        if line.strip().startswith('loop_'):
+        if line.strip().startswith('_atom_site_type_symbol'):
             reading_elements = True  # Start reading element symbols
             continue
             # If reading elements, first skip headers
@@ -82,8 +82,6 @@ def cifread(cif):
         if reading_elements and header_skipped:
             element = line.strip().split()[0]  # First column is the element name
             elements.append(element)
-            # Convert formula (e.g., "Al2 O2") to dictionary {"Al": 2, "O": 2}
-    
     
     elem_count = {}
     matches = re.findall(r'([A-Z][a-z]*)(\d*)', cif['formula'])  # Match elements and their count
@@ -140,7 +138,6 @@ def count_elemtypes(file):
                     
                     elem_type[element_name] = max(elem_type[element_name], element_number)
                     
-
     return elem_type
 
 def slab_generator(file,x,y,z):
