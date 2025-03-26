@@ -77,9 +77,11 @@ def cifread(cif):
             header_skipped = True  # Once we hit real data, stop skipping
         # Now read element names
         if reading_elements and header_skipped:
-            element = line.strip().split()[0]  # First column is the element name
-            elements.append(element)# First column is the element name
-    
+            parts = line.strip().split()
+            if parts:  # ✅ Ensure the line has at least one part before accessing [0]
+                element = parts[0]  # First column is the element name
+                elements.append(element)
+                
     elem_count = {}
     matches = re.findall(r'([A-Z][a-z]*)(\d*)', cif['formula'])  # Match elements and their count
     for element, count in matches:
