@@ -1,6 +1,6 @@
 data_image0
-_chemical_formula_structural       HHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBeHHeHHeLiBeLiBe
-_chemical_formula_sum              "H30 He30 Li30 Be30"
+_chemical_formula_structural       B2Te2
+_chemical_formula_sum              "B2 Te2"
 _cell_length_a       3.56
 _cell_length_b       3.56
 _cell_length_c       106.0

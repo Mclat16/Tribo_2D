@@ -222,7 +222,7 @@ class sheet:
                     mass=data.atomic_masses[data.atomic_numbers[m]] 
                     f.write(f"mass {elemgroup[0][m][0]}*{elemgroup[-1][m][-1]} {mass} #{m} layer {l+1}\n")
             
-            f.write(f"pair_style hybrid {'sw ' * 4}lj/cut 8.0\n")
+            f.write(f"pair_style hybrid {'sw ' * 4} lj/cut 8.0\n")
             
             for l in range(4):
                 potentials['2D'][l] = [
@@ -231,16 +231,17 @@ class sheet:
                 ]
                 f.write(f"pair_coeff * * sw {i} {self.directory}/potentials/{self.var['data']['2D'][1]}.sw {potentials['2D'][l]} # interlayer '2D' Layer {l+1}\n")
                 i += 1 
-
-            for s in self.var['data']['2D'][3]:
-                e,sigma = LJparams(s,t)
-                for l in range(4):
-                    t1 = f"{elemgroup['2D'][l][t][0]}*{elemgroup['2D'][l][t][-1]}"
-                    t2 = f"{elemgroup['2D'][l+1][s][0]}*{elemgroup['2D'][-1][s][-1]}"
-                    if elemgroup['2D'][l][t][0] == elemgroup['2D'][l][t][-1]:
-                        t1 = f"{elemgroup['2D'][l][t][0]}"
-                    if elemgroup['2D'][l+1][s][0] == elemgroup['2D'][-1][s][-1]:
-                        t2 = f"{elemgroup['2D'][l+1][s][0]}"
-                    if elemgroup['2D'][l][t][0]>elemgroup['2D'][l+1][s][0]:
-                        t1, t2 = t2, t1
-                    f.write(f"pair_coeff {t1} {t2} lj/cut {e} {sigma} \n")
+            
+            for t in self.var['data']['2D'][3]:
+                for s in self.var['data']['2D'][3]:
+                    e,sigma = LJparams(s,t)
+                    for l in range(4):
+                        t1 = f"{elemgroup['2D'][l][t][0]}*{elemgroup['2D'][l][t][-1]}"
+                        t2 = f"{elemgroup['2D'][l+1][s][0]}*{elemgroup['2D'][-1][s][-1]}"
+                        if elemgroup['2D'][l][t][0] == elemgroup['2D'][l][t][-1]:
+                            t1 = f"{elemgroup['2D'][l][t][0]}"
+                        if elemgroup['2D'][l+1][s][0] == elemgroup['2D'][-1][s][-1]:
+                            t2 = f"{elemgroup['2D'][l+1][s][0]}"
+                        if elemgroup['2D'][l][t][0]>elemgroup['2D'][l+1][s][0]:
+                            t1, t2 = t2, t1
+                        f.write(f"pair_coeff {t1} {t2} lj/cut {e} {sigma} \n")

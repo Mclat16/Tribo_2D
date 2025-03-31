@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       CTe
+_chemical_formula_structural       C2Te2
 _chemical_formula_sum              "C2  Te2"
 _cell_length_a       3.889
 _cell_length_b       3.39

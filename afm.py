@@ -19,93 +19,94 @@ import shutil
 
 class afm:
     def __init__(self,input):
+        
+        # Generate data and variables
 
-        self.var = read_config(input)
-        self.var['data'] = {
-            '2D' :cifread(self.var['2D']['mat']), 
-            'sub':matsearch(self.var['sub']['mat']),
-            'tip':matsearch(self.var['tip']['mat']),
+        var = read_config(input) # Read input file settings
+        self.group = ['2D' ,'sub', 'tip']
+
+        var['data'] = {mat: cifread(var[mat]['mat']) for mat in self.group}  # Read materials  
+        var['pot'] = {mat: count_elemtypes(var['data'][mat]['pot_path']) for mat in self.group}  # Count potentials  
+
+        var['data'] = {
+            mat['natype']: sum(var['pot'][mat].values()) 
+            for mat in self.group
         }
 
-        if self.var['flake']['flake'] == True:
-            self.var['data'].update({'flake':cifread(self.var['flake']['mat'])}) 
-            ngroups = ngroups + 1
+        # Build one layer of 2D material to generate important variables
 
-        # Generate folder and file locations 
+        self.var = sheet(var)
+
+        # Create file locations
         self.var['dir'] = f"scripts/{self.var['data']['2D'][1]}/size_{self.var['2D']['x']}x_{self.var['2D']['y']}y/sub_{self.var['sub']['amorph']}{self.var['data']['sub'][1]}/tip_{self.var['tip']['amorph']}{self.var['data']['tip'][1]}_r{self.var['tip']['r']}/K{self.var['general']['temproom']}"
 
-        self.scripts = self.var['dir'] + "/scripts/"
+        self.scripts = self.var['dir'] +"/scripts"
 
-        Path(self.var['dir'] +"/visuals").mkdir(parents=True, exist_ok=True)
-        Path(self.var['dir'] +"/results").mkdir(parents=True, exist_ok=True)
-        Path(self.var['dir'] + "/system_build").mkdir(parents=True, exist_ok=True)
-        Path(self.var['dir'] + "/potentials").mkdir(parents=True, exist_ok=True)
-        Path(self.scripts).mkdir(parents=True, exist_ok=True)
-        with open(self.scripts + "/list_system", 'w'):
-            pass
-        with open(self.scripts + "/list_load", 'w'):
-            pass
-        with open(self.scripts + "/list_slide", 'w'):
-            pass
+        dirs = ["visuals", "results", "system_build", "potentials", "scripts"]
+
+        for d in dirs:
+            Path(self.var['dir'], d).mkdir(parents=True, exist_ok=True)
+
+        files = ["list_system", "list_load", "list_slide"]
+
+        for f in files:
+            with open(Path(self.var['dir'], "scripts", f), "w"):
+                pass 
         
+
+        #Expand to multiple layers if required
+
         self.var['ngroups'] = {}
-        
         for l in self.var['2D']['layers']:
-            directory_l = self.var['dir']+"/l_"+ str(l)
-            Path(directory_l + "/data").mkdir(parents=True, exist_ok=True)
-            Path(directory_l +"/lammps").mkdir(parents=True, exist_ok=True)
-            self.elem2D = sheet(self.var,l)
-            self.natype = len(self.elem2D)
-            self.var['ngroups'][l] = self.natype*l + self.var['data']['sub']['nelements']*3 + self.var['data']['tip']['nelements']*3
+            self.directory[l] = Path(self.var['dir']) / f"l_{l}"
+
+            for sub in ["data", "lammps"]:
+                (self.directory[l] / sub).mkdir(parents=True, exist_ok=True)
+            _ = stacking(self.var,l)
+            self.var['ngroups'][l] = self.var['2D']['natype']*l + self.var['data']['sub']['nelements']*3 + self.var['data']['tip']['nelements']*3
             
 
-        file = f"{self.var['dir']}/system_build/{str(self.var['data']['2D'][1])}_{str(self.var['2D']['layers'][0])}.lmp"
-        self.var['dim']= get_model_dimensions(file)
+
         self.scan_angle = np.arange(self.var['tip']['scan_angle'][0],self.var['tip']['scan_angle'][1]+1,self.var['tip']['scan_angle'][2])
 
+        # Limit the number of visual files generated
         self.dump_load = [self.var['general']['force'][i] for i in range(4, len(self.var['general']['force']), 5)]
         self.dump_slide = [self.scan_angle[i] for i in range(4, len(self.scan_angle), 5)]
         
+        # Generate substrate and tip
+
         tip(self.var)
         sub(self.var)
 
     def system(self):
         for layer in self.var['2D']['layers']:
-            directory_l = self.var['dir']+"/l_"+ str(layer)
 
-            [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['data']['2D']['lat_c']*(layer-1)/2]# Tip placement
+            [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['2D']['lat_c']*(layer-1)/2]# Tip placement
             tip_h       = round(self.var['tip']['r']*0.52)
-            flake_z     = 17 + self.var['data']['2D']['lat_c']*layer/2
             tipt        = tip_z+tip_h-3
-            h_2D        = 10+self.var['data']['2D']['lat_c']/3
+            h_2D        = 10+self.var['2D']['lat_c']/3
             tip_c_bot   = tipt-2
             tip_c_max   = tipt   
 
-            filename = directory_l +"/lammps/" + "system.lmp"
+            filename = self.directory[layer] +"/lammps/" + "system.lmp"
             with open(self.scripts + "/list_system", 'a') as f:
                 f.write(f"{filename}\n")
+
             with open(filename, 'w') as f:
                 init(f)
                 f.writelines([
-                    # f"include {directory_l}/lammps/in.init\n\n",
                     f"region box block {self.var['dim']['xlo']} {self.var['dim']['xhi']} {self.var['dim']['ylo']} {self.var['dim']['yhi']} -5 100\n",
                     f"create_box      {self.var['ngroups'][layer]} box\n\n",
                     "#----------------- Read data files -----------------------\n\n",
                     f"read_data       {self.var['dir']}/system_build/sub.lmp add append group sub\n",
                     f"read_data       {self.var['dir']}/system_build/tip.lmp add append shift {tip_x} {tip_y} {tip_z}  group tip\n",
-                    f"read_data       {self.var['dir']}/system_build/{self.var['data']['2D']['filename']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D\n\n"
+                    f"read_data       {self.var['dir']}/system_build/{self.var['data']['2D']['mat']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D\n\n"
                 ])
-                for t in range(max(self.var['data']['sub'][2],self.var['data']['tip'][2],self.natype)):
+
+                for t in range(max(self.var['data'][mat]['natype'] for mat in self.group)):
                     t+=1
                     f.write(f"group type_{t} type {t}\n") 
-                group = ['sub','tip','2D']
                 
-                i = 1
-                if self.var['flake']['flake'] == True:
-                    group.append("flake")
-                    f.write(f"\nread_data       {self.var['dir']}/system_build/{self.var['data']['2D'][1]}_flake.data add append shift 25.83 24.1447882575101 {flake_z} group flake\n" )
-                
-
                 # Identify atom regions
                 f.writelines([
                     "\n#Identify the top atoms of AFM tip\n\n",
@@ -123,58 +124,59 @@ class afm:
                     "# Define sub groups and atom types\n\n"
                 ])
 
+                i = 1
                 # Define sub groups and atom types
-                for g in ('sub','tip'):
-                    for t in range(self.var['data'][g]['nelements']):
-                        t+=1
-                        f.writelines([
-                        f"group {g}_{t} intersect {g} type_{t}\n",
-                        f"set group {g}_{t} type {i}\n",
+                for g in self.group:
+                    for t in range(self.var['data'][g]['natype']):
+                        if g == '2D':
+                            t+=1
+                            f.writelines([
+                            f"group 2D_{t} intersect 2D type_{t}\n",
+                            f"set group 2D_{t} type {i}\n",
+                            ])
+                            i+=1
+                            for l in range(layer):
+                                l+=1
+                                zlo= h_2D + l*self.var['2D']['lat_c']/2 -1
+                                zhi= zlo + self.var['2D']['lat_c']/2
+                                f.writelines([
+                                f"region layer_{l} block INF INF INF INF {zlo} {zhi} units box\n",
+                                f"group layer_{l} region layer_{l} \n",
+                                f"region layer_{l} delete\n",
+                                f"group layer intersect 2D_{t} layer_{l}\n",
+                                f"set group layer type {i}\n",
+                                f"group layer_{l} delete\n"
+                                f"group layer delete\n\n"
+                                ])
+                                i+=1
+                                f.write(f"group 2D_{t} delete\n\n")
+                        else:
+                            t+=1
+                            f.writelines([
+                            f"group {g}_{t} intersect {g} type_{t}\n",
+                            f"set group {g}_{t} type {i}\n",
 
-                        f"group {g}_fix_{t} intersect {g}_fix type_{t}\n",
-                        f"set group {g}_fix_{t} type {i+1}\n",
-                        f"group {g}_fix_{t} delete\n\n",
+                            f"group {g}_fix_{t} intersect {g}_fix type_{t}\n",
+                            f"set group {g}_fix_{t} type {i+1}\n",
+                            f"group {g}_fix_{t} delete\n\n",
 
-                        f"group {g}_thermo_{t} intersect {g}_thermo type_{t}\n",
-                        f"set group {g}_thermo_{t} type {i+2}\n",
-                        f"group {g}_thermo_{t} delete\n\n"
-                        ])
-                        i+=3
-                        f.write(f"group {g}_{t} delete\n\n")
-                        
-                for t in range(self.natype):
-                    t+=1
-                    f.writelines([
-                    f"group 2D_{t} intersect 2D type_{t}\n",
-                    f"set group 2D_{t} type {i}\n",
-                    ])
-                    i+=1
-                    for l in range(layer):
-                        l+=1
-                        zlo= h_2D + l*self.var['data']['2D']['lat_c']/2 -1
-                        zhi= zlo + self.var['data']['2D']['lat_c']/2
-                        f.writelines([
-                        f"region layer_{l} block INF INF INF INF {zlo} {zhi} units box\n",
-                        f"group layer_{l} region layer_{l} \n",
-                        f"region layer_{l} delete\n",
-                        f"group layer intersect 2D_{t} layer_{l}\n",
-                        f"set group layer type {i}\n",
-                        f"group layer_{l} delete\n"
-                        f"group layer delete\n\n"
-                        ])
-                        i+=1
-                        f.write(f"group 2D_{t} delete\n\n")
-
-                settings_filename = directory_l+"/lammps/system.in.settings"
-
+                            f"group {g}_thermo_{t} intersect {g}_thermo type_{t}\n",
+                            f"set group {g}_thermo_{t} type {i+2}\n",
+                            f"group {g}_thermo_{t} delete\n\n"
+                            ])
+                            i+=3
+                            f.write(f"group {g}_{t} delete\n\n")
+            
+                #generate potentials
+                settings_filename = f"{self.directory[layer]}/lammps/system.in.settings"
                 self.settings(settings_filename,layer) 
 
                 f.writelines([
                 "# Apply potentials\n\n",
-                f"include        {directory_l}/lammps/system.in.settings\n\n",
+                f"include        {self.directory[layer]}/lammps/system.in.settings\n\n",
                 "#----------------- Create visualisation files ------------\n\n",
                 f"dump            sys all atom 100 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
-                "#----------------- Minimize the system -------------------\n\n"
+                "#----------------- Minimize the system -------------------\n\n",
                 "min_style       cg\n",
                 "minimize        1.0e-4 1.0e-8 1000000 1000000\n\n",
                 "timestep        0.001\n",
@@ -243,30 +245,31 @@ class afm:
                 "if '${r} < 0.2' then 'jump SELF loop_end' else 'jump SELF check_r'\n\n",
                 "# End of the loop\n\n",
                 "label loop_end\n\n",
-                f"write_data {directory_l}/data/load_{self.var['general']['find']}N.data"
+                f"write_data {self.directory[layer]}/data/load_{self.var['general']['find']}N.data"
                 ])
-
-                
+     
     def load(self):
         for layer in self.var['2D']['layers']:
-            directory_l = self.var['dir']+"/l_"+ str(layer)
+
             for force in self.var['general']['force']:
                 dump = False
                 if force in self.dump_load:
                     dump = True
-                filename = directory_l + "/lammps/" + "load_" + str(force) +  "N.lmp"
+
+                filename = f"{self.directory[layer]}/lammps/load_{force}N.lmp"
+                
                 with open(self.scripts + "/list_load", 'a') as f:
                     f.write(f"{filename}\n")
+
                 with open(filename, 'w') as f:
                     init(f)
                     f.writelines([
-                    # f"include {directory_l}/lammps/in.init\n\n",
-                    f"read_data       {directory_l}/data/load_{self.var['general']['find']}N.data # Read system data\n\n",
-                    f"include         {directory_l}/lammps/system.in.settings\n\n",
+                    # f"include {self.directory[layer]}/lammps/in.init\n\n",
+                    f"read_data       {self.directory[layer]}/data/load_{self.var['general']['find']}N.data # Read system data\n\n",
+                    f"include         {self.directory[layer]}/lammps/system.in.settings\n\n",
                     "#----------------- Create visualisation files  ------------\n\n",
                     ])
 
-                    # CHANGE THIS BIT
                     if dump == True:
                         f.write(f"dump            sys all atom 100 ./{self.var['dir']}/visuals/load_{force}N_l{layer}.lammpstrj\n\n",)
 
@@ -332,7 +335,7 @@ class afm:
                     "if '${r} < 0.2' then 'jump SELF loop_end' else 'jump SELF          check_r'\n\n",
                     "# End of the loop\n\n",
                     "label loop_end\n\n",
-                    f"write_data {directory_l}/data/load_{force}N.data"
+                    f"write_data {self.directory[layer]}/data/load_{force}N.data"
                     ])
 
     def slide(self):
@@ -343,7 +346,6 @@ class afm:
         tipps = self.var['tip']['s']/100 # in A/ps
 
         for layer in self.var['2D']['layers']:
-            directory_l = self.var['dir']+"/l_"+ str(layer)
             for force in self.var['general']['force']:
                 
                 if force == self.var['tip']['scan_angle'][3]:
@@ -361,15 +363,15 @@ class afm:
                         
                     spring_x = np.cos(np.deg2rad(a))
                     spring_y = np.sin((a))
-                    filename = directory_l + "/lammps/" + "slide_" + str(force) +"N_"+ str(self.var['tip']['s']) + "ms_" + str(a) + "deg.lmp"
+                    filename = self.directory[layer] + "/lammps/" + "slide_" + str(force) +"N_"+ str(self.var['tip']['s']) + "ms_" + str(a) + "deg.lmp"
                     with open(self.scripts + "/list_slide", 'a') as f:
                         f.write(f"{filename}\n")
                     with open(filename, 'w') as f:
                         init(f)
                         f.writelines([
-                        # f"include {directory_l}/lammps/in.init\n\n",
-                        f"read_data       {directory_l}/data/load_{force}N.data # Read system data\n\n",
-                        f"include         {directory_l}/lammps/system.in.settings\n\n",
+                        # f"include {self.directory[layer]}/lammps/in.init\n\n",
+                        f"read_data       {self.directory[layer]}/data/load_{force}N.data # Read system data\n\n",
+                        f"include         {self.directory[layer]}/lammps/system.in.settings\n\n",
                         "#----------------- Create visualisation files ------------\n\n",
                         ])
                         #CHANGE THIS
@@ -420,7 +422,7 @@ class afm:
                         "run 100000\n\n",
                         f"fix             spr tip_fix smd cvel  {springeV} {tipps} tether -{spring_x} -{spring_y} NULL 0.0\n\n",
                         "run 200000\n",
-                        f"write_data {directory_l}/data/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms.data"
+                        f"write_data {self.directory[layer]}/data/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms.data"
                         ])
     
     def settings(self,filename,layer):
@@ -473,7 +475,7 @@ class afm:
                         i+=3
 
                 elif g == '2D':
-                    for t in range(self.natype):
+                    for t in range(self.var['2D']['natype']):
                         m = self.elem2D[t]
 
                         for l in range(layer):
@@ -544,12 +546,6 @@ class afm:
                         else:  
                             f.write(f"pair_coeff {elemgroup[key][t][0]}*{elemgroup[key][t][-1]} {elemgroup['2D'][0][t][0]}*{elemgroup['2D'][-1][t][-1]} lj/cut {e} {sigma}\n")
 
-            
-            for s in self.var['data']['sub']['elements']:
-                for t in self.var['data']['tip']['elements']:
-                    e,sigma = LJparams(s,t)
-                    f.write(f"pair_coeff {elemgroup['sub'][t][0]}*{elemgroup['sub'][t][-1]} {elemgroup['tip'][t][0]}*{elemgroup['tip'][t][-1]}  lj/cut {e} {sigma} \n")
-                    
                 if layer>1:
                     for s in self.var['data']['2D']['elements']:
                         e,sigma = LJparams(s,t)
@@ -568,7 +564,11 @@ class afm:
 
                             f.write(f"pair_coeff {t1} {t2} lj/cut {e} {sigma} \n")
 
-
+            for s in self.var['data']['sub']['elements']:
+                for t in self.var['data']['tip']['elements']:
+                    e,sigma = LJparams(s,t)
+                    f.write(f"pair_coeff {elemgroup['sub'][t][0]}*{elemgroup['sub'][t][-1]} {elemgroup['tip'][t][0]}*{elemgroup['tip'][t][-1]}  lj/cut {e} {sigma} \n")
+                    
     def pbs(self):
 
         pbs_type = ['system','load','slide']

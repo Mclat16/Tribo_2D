@@ -75,10 +75,10 @@ def cifread(cif):
             if line.strip().startswith('_'):  # These are column headers
                 continue  # Skip header lines
             header_skipped = True  # Once we hit real data, stop skipping
-        # Now read element names
+        # Read element names
         if reading_elements and header_skipped:
             parts = line.strip().split()
-            if parts:  # ✅ Ensure the line has at least one part before accessing [0]
+            if parts:  
                 element = parts[0]  # First column is the element name
                 elements.append(element)
                 
@@ -138,17 +138,6 @@ def count_elemtypes(file):
                     elem_type[element_name] = max(elem_type[element_name], element_number)
                     
     return elem_type
-
-def slab_generator(file,x,y,z):
-
-    atomsk_command = f"atomsk {file}.cif -duplicate 2 2 1 -orthogonal-cell cif -ow -v 0"
-    subprocess.run(atomsk_command, shell=True, check=True)
-    cif = cifread(file+".cif")
-    x2 = round(x/cif["lattice"][0])
-    y2 = round(y/cif["lattice"][1])
-    z2 = round(z/cif["lattice"][2])
-    atomsk_command2 = f"atomsk {file}.cif -duplicate {x2} {y2} {z2} lammps -ow -v 0"
-    subprocess.run(atomsk_command2, shell=True, check=True)
 
 def get_model_dimensions(lmp):
     xlo , xhi, ylo, yhi, zlo, zhi = [None] *6

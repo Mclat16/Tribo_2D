@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       CSe
+_chemical_formula_structural       C2Se2
 _chemical_formula_sum              "C2   Se2"
 _cell_length_a       4.229
 _cell_length_b       3.034

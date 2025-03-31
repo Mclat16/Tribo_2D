@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       BO
+_chemical_formula_structural       B2O2
 _chemical_formula_sum              "B2  O2"
 _cell_length_a       2.44
 _cell_length_b       2.44

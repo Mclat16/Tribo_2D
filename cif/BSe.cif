@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       BSe
+_chemical_formula_structural       B2Se2
 _chemical_formula_sum              "B2  Se2"
 _cell_length_a       3.25
 _cell_length_b       3.25
