@@ -57,7 +57,7 @@ def tip(var):
     "#Identify thermostat region of AFM tip\n\n",
     f"region          tip_thermo block INF INF INF INF {z-5} {z-3} units box\n",
     "group           tip_thermo region tip_thermo\n\n",
-            ])
+    ])
     
     for t in range(var['data']['tip']['natype']):
         t+=1
@@ -464,20 +464,19 @@ def center(system,filename,var):
     f"read_data       {filename} add append"
     ])
     
-    elem = var[system]['elem2D'].copy()
-    count = {}
-    result=[]
-    mass = []
-    for i in range(len(elem)):
-        mass=data.atomic_masses[data.atomic_numbers[elem[i]]]
+    elem = {}
+    i=0
+    for element, count in var['pot'][system].items():
+        if not count or count == 1:
+            elem[i] = element
+            i+=1
+        else:
+            for t in range(1,count+1):
+                elem[i] = element + str(t)
+                i+=1
+        mass=data.atomic_masses[data.atomic_numbers[element]]
         lmp.command("mass %d %d" % (i+1, mass))
-        element = elem[i]
-        count[element] = count.get(element, 0) + 1
-        result.append(element + str(count[element]))
-    for i in range(len(elem)):
-        element = elem[i]
-        if count[element] > 1:
-            elem[i]=result[i]
+
     
     lmp.commands_list([
     "pair_style sw",

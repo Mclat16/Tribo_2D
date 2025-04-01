@@ -82,11 +82,7 @@ class afm:
         for layer in self.var['2D']['layers']:
 
             [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['2D']['lat_c']*(layer-1)/2]# Tip placement
-            tip_h       = round(self.var['tip']['r']*0.52)
-            tipt        = tip_z+tip_h-3
-            h_2D        = 10+self.var['2D']['lat_c']/3
-            tip_c_bot   = tipt-2
-            tip_c_max   = tipt   
+            h_2D        = 10+self.var['2D']['lat_c']
 
             filename = self.directory[layer] +"/lammps/" + "system.lmp"
             with open(self.scripts + "/list_system", 'a') as f:
@@ -103,73 +99,23 @@ class afm:
                     f"read_data       {self.var['dir']}/system_build/{self.var['data']['2D']['mat']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D\n\n"
                 ])
 
-                for t in range(max(self.var['data'][mat]['natype'] for mat in self.group)):
-                    t+=1
-                    f.write(f"group type_{t} type {t}\n") 
                 
-                # Identify atom regions
-                f.writelines([
-                    "\n#Identify the top atoms of AFM tip\n\n",
-                    f"region          tip_fix block INF INF INF INF {tipt} INF units box\n",
-                    "group           tip_fix region tip_fix\n\n",
-                    "#Identify thermostat region of AFM tip\n\n",
-                    f"region          tip_thermo block INF INF INF INF {tip_c_bot} {tip_c_max} units box\n",
-                    "group           tip_thermo region tip_thermo\n\n",
-                    "#Identify bottom atoms of Amorphous Silicon substrate\n\n",
-                    "region          sub_fix block INF INF INF INF INF 2 units box\n",
-                    "group           sub_fix region sub_fix\n\n",
-                    "#Identify thermostat region of Amorphous Silicon substrate\n\n",
-                    "region          sub_thermo block INF INF INF INF 2 5 units box\n",
-                    "group           sub_thermo region sub_thermo\n\n",
-                    "# Define sub groups and atom types\n\n"
-                ])
+                for t in {self.var['ngroups'][layer]}:
+                    f.write(f"group type_{t} type {t}\n")
 
-                i = 1
-                # Define sub groups and atom types
+                i = 0
                 for g in self.group:
-                    for t in range(self.var['data'][g]['natype']):
-                        if g == '2D':
-                            t+=1
-                            f.writelines([
-                            f"group 2D_{t} intersect 2D type_{t}\n",
-                            f"set group 2D_{t} type {i}\n",
-                            ])
-                            i+=1
-                            for l in range(layer):
-                                l+=1
-                                zlo= h_2D + l*self.var['2D']['lat_c']/2 -1
-                                zhi= zlo + self.var['2D']['lat_c']/2
-                                f.writelines([
-                                f"region layer_{l} block INF INF INF INF {zlo} {zhi} units box\n",
-                                f"group layer_{l} region layer_{l} \n",
-                                f"region layer_{l} delete\n",
-                                f"group layer intersect 2D_{t} layer_{l}\n",
-                                f"set group layer type {i}\n",
-                                f"group layer_{l} delete\n"
-                                f"group layer delete\n\n"
-                                ])
-                                i+=1
-                                f.write(f"group 2D_{t} delete\n\n")
-                        else:
-                            t+=1
-                            f.writelines([
-                            f"group {g}_{t} intersect {g} type_{t}\n",
+                    for t in range(1,self.var['data'][g]['natype']+1):
+                        f.writelines([
+                            f"group {g}_{t} intersect type_{t} {g}\n",
                             f"set group {g}_{t} type {i}\n",
-
-                            f"group {g}_fix_{t} intersect {g}_fix type_{t}\n",
-                            f"set group {g}_fix_{t} type {i+1}\n",
-                            f"group {g}_fix_{t} delete\n\n",
-
-                            f"group {g}_thermo_{t} intersect {g}_thermo type_{t}\n",
-                            f"set group {g}_thermo_{t} type {i+2}\n",
-                            f"group {g}_thermo_{t} delete\n\n"
+                            f"group {g}_{t} delete \n"
                             ])
-                            i+=3
-                            f.write(f"group {g}_{t} delete\n\n")
+                    i += self.var['data'][g]['natype']
             
                 #generate potentials
                 settings_filename = f"{self.directory[layer]}/lammps/system.in.settings"
-                self.settings(settings_filename,layer) 
+                settings_afm(settings_filename,layer) 
 
                 f.writelines([
                 "# Apply potentials\n\n",
@@ -425,218 +371,4 @@ class afm:
                         f"write_data {self.directory[layer]}/data/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms.data"
                         ])
     
-    def settings(self,filename,layer):
-        """Writes the LAMMPS input file content to the specified filename.
-        Args:
-        filename (str): The name of the file to write to.
-        """
-        with open(filename, 'w') as f:
-            group = ['sub','tip','2D']
-            if self.var['flake']['flake'] == True:
-                group.append("flake")
-
-            
-            sub_elem = self.var['data']['sub']['elements'].copy()
-            tip_elem = self.var['data']['tip']['elements'].copy()
-            twoD_elem = [str(sublist[0]) for sublist in self.elem2D]
-            elems = [sub_elem,tip_elem,twoD_elem]
-
-            # number elements
-
-            for arr in elems:
-                count = {}
-                result=[]
-                for i in range(len(arr)):
-                    element = arr[i]
-                    count[element] = count.get(element, 0) + 1
-                    result.append(element + str(count[element]))
-                for i in range(len(arr)):
-                    element = arr[i]
-                    if count[element] > 1:
-                        arr[i]=result[i]
-            
-            # Set masses and create groups
-            i = 0
-            group_def = {}
-            elemgroup = {}
-            potentials= {}
-
-            for g in group:
-
-                if g == 'sub' or g == 'tip':
-                    for t in range(self.var['data'][g]['nelements']):
-                        m = self.var['data'][g]['elements'][t]
-                        group_def.update({
-                            i:   [f"{g}_b_t{t+1}", str(i+1), str(m), sub_elem[t]],
-                            i+1: [f"{g}_fix_t{t+1}", str(i+2), str(m), sub_elem[t]],
-                            i+2: [f"{g}_thermo_t{t+1}", str(i+3), str(m), sub_elem[t]]
-                        })
-                        elemgroup[g][m].extend([i, i+1, i+2])           
-                        i+=3
-
-                elif g == '2D':
-                    for t in range(self.var['2D']['natype']):
-                        m = self.elem2D[t]
-
-                        for l in range(layer):
-                            group_def.update({i: [str(g)+"_l" + str(l+1) + "_t"+str(t+1), str(i+1),str(m),twoD_elem[t],l+1]})
-                            i+=1
-                            elemgroup[g][l][m].append(i)
-
-                for m in self.var['data'][g]['elements']: 
-                    mass=data.atomic_masses[data.atomic_numbers[m]] 
-                    if g =='2D':
-                        f.write(f"mass {elemgroup[g][0][m][0]}*{elemgroup[g][-1][m][-1]} {mass} #{m} layer {l+1}\n")
-                    else:
-                        f.write(f"mass {elemgroup[g][m][0]}*{elemgroup[g][m][-1]} {mass} #{m} layer {l+1}\n")
-
-                all = [group_def[i][1] for i in range(self.var['ngroups'][layer]) if g in group_def[i][0]]
-                f.write(f"group {g}_all type {' '.join(all)}\n")
-                
-                if g == 'sub' or g == 'tip':
-                    for n in ["_fix", "_thermo"]:
-                        sub_group = [group_def[i][1] for i in range(self.var['ngroups'][layer]) if g+n in group_def[i][0]]
-                        f.write(f"group {g}{n} type {' '.join(sub_group)}\n")
-
-                if g == '2D':
-                    for l in range(layer):
-                        potentials[g][l] = [
-                            group_def[i][3] if any("2D_l"+str(l+1) in group_def[i][0]) else "NULL"
-                            for i in range(self.var['ngroups'][layer])
-                        ]
-                else:
-                    potentials[g]=[group_def[i][2] if any(g in group_def[i][0]) else "NULL"
-                                   for i in range(self.var['ngroups'][layer])]
-
-            f.writelines(["group mobile union tip_thermo sub_thermo\n",
-                          f"pair_style hybrid {'sw ' * (l + 2)}lj/cut 8.0\n"
-                        ])
-            
-            i = 1 
-            for key in group:
-                if key == '2D':
-                    for l in range(layer):  
-                        f.write(f"pair_coeff * * sw {i} {self.var['dir']}/potentials/{self.var['data'][key]['formula']}.sw {potentials[key][l]} # interlayer {key.capitalize()} Layer {l+1}\n")
-                        i += 1 
-                else:
-                    f.write(f"pair_coeff * * sw {i} {self.var['dir']}/potentials/{self.var['data'][key]['formula']}.sw {potentials[key]} # interlayer {key.capitalize()}\n")
-                    i += 1 
-
-
-            # This is for potentials that include VdW interactions
-            # layer_potentials = [
-            #     group_def[i][2] if any(group_def[i][2] == element and "2D" in group_def[i][0] for element in set(self.data["2D"][3])) else "NULL"
-            #     for i in range(1, self.ngroups + 1)
-            # ]
-            # f.write(f"pair_coeff * * sw 3 Potentials/{self.data['2D'][1]}.sw {'  '.join(layer_potentials)} #interlayer substrate\n")
-            
-            ############ COPY POTENTIALS TO FILE
-            
-            # file = [Path(__file__).parent / f"potentials/{self.var['data']['2D'][1]}.sw",Path(__file__).parent / f"potentials/{self.var['data']['tip'][1]}.sw",Path(__file__).parent / f"potentials/{self.var['data']['sub'][1]}.sw"]
-            # shutil.copy2(file, self.var['dir'] / 'potentials')
-
-            #Consider LabelMaps to reduce amount of lines but doesn't really matter
-            
-            for t in self.var['data']['2D']['elements']:    
-                for key in ('sub','tip'):
-                    for s in self.var['data'][key]['elements']:
-                        e,sigma = LJparams(t,s)
-                        if len(elemgroup['2D'][t]) == 1 and layer == 1:
-                            f.write(f"pair_coeff {elemgroup[key][t][0]}*{elemgroup[key][t][-1]} {elemgroup['2D'][0][t][0]} lj/cut {e} {sigma}\n")
-                        else:  
-                            f.write(f"pair_coeff {elemgroup[key][t][0]}*{elemgroup[key][t][-1]} {elemgroup['2D'][0][t][0]}*{elemgroup['2D'][-1][t][-1]} lj/cut {e} {sigma}\n")
-
-                if layer>1:
-                    for s in self.var['data']['2D']['elements']:
-                        e,sigma = LJparams(s,t)
-
-                        for l in range(1,layer):
-                            t1 = f"{elemgroup['2D'][l][t][0]}*{elemgroup['2D'][l][t][-1]}"
-                            t2 = f"{elemgroup['2D'][l+1][s][0]}*{elemgroup['2D'][-1][s][-1]}"
-
-                            if elemgroup['2D'][l][t][0] == elemgroup['2D'][l][t][-1]:
-                                t1 = f"{elemgroup['2D'][l][t][0]}"
-                            if elemgroup['2D'][l+1][s][0] == elemgroup['2D'][-1][s][-1]:
-                                t2 = f"{elemgroup['2D'][l+1][s][0]}"
-
-                            if elemgroup['2D'][l][t][0]>elemgroup['2D'][l+1][s][0]:
-                                t1, t2 = t2, t1
-
-                            f.write(f"pair_coeff {t1} {t2} lj/cut {e} {sigma} \n")
-
-            for s in self.var['data']['sub']['elements']:
-                for t in self.var['data']['tip']['elements']:
-                    e,sigma = LJparams(s,t)
-                    f.write(f"pair_coeff {elemgroup['sub'][t][0]}*{elemgroup['sub'][t][-1]} {elemgroup['tip'][t][0]}*{elemgroup['tip'][t][-1]}  lj/cut {e} {sigma} \n")
-                    
-    def pbs(self):
-
-        pbs_type = ['system','load','slide']
-        for type in pbs_type:
-            filename = self.scripts + self.data['2D'][1] + f"_{type}.pbs"
-            PBS = '"${PBS_ARRAY_INDEX}p"'
-            PBS_log = "{PBS_ARRAY_INDEX}"
-            with open(self.scripts + f"list_{type}", 'r' ) as f:
-                n = len(f.readlines())
-            with open(filename,'w') as f: 
-                f.writelines([
-                    "#!/bin/bash\n",
-                    "#PBS -l select=1:ncpus=32:mem=62gb:mpiprocs=32:cpu_type=rome\n",
-                    "#PBS -l walltime=08:00:00\n",
-                    f"#PBS -J 1-{n}\n",
-                    f"#PBS -o /rds/general/user/mv923/home/{self.data['2D'][1]}/\n",
-                    f"#PBS -e /rds/general/user/mv923/home/{self.data['2D'][1]}/\n\n",
-
-                    "module purge\n",
-                    "module load tools/dev\n",
-                    "module load LAMMPS/23Jun2022-foss-2021b-kokkos\n",
-                    "#module load OpenMPI/4.1.4-GCC-11.3.0\n\n",
-
-                    "#Go to the temp directory (ephemeral) and create a new folder for this run\n",
-                    "cd $EPHEMERAL\n\n",
-
-
-                    "# $PBS_O_WORKDIR is the directory where the pbs script was sent from. Copy everything from the work directory to the temporary directory to prepare for the run\n\n",
-
-                    f"mpiexec lmp -l {self.data['2D'][1]}/${PBS_log}.log -in $(sed -n {PBS} {self.var['dir']}/scripts/list_{type})\n\n",
-
-                    # "#After the end of the run copy everything back to the parent directory\n",
-                    # f"cp -r ./{self.var['dir']}/ $PBS_O_WORKDIR/{self.var['dir']}\n\n"
-                ])
-
-        filename = self.scripts + self.data['2D'][1] + "_transfer.pbs"
-        with open(filename,'w') as f: 
-            f.writelines([
-                "#!/bin/bash\n",
-                "#PBS -l select=1:ncpus=1:mem=62gb:cpu_type=rome\n",
-                "#PBS -l walltime=00:30:00\n\n",
-                f"#PBS -o /rds/general/user/mv923/home/{self.data['2D'][1]}/\n",
-                f"#PBS -e /rds/general/user/mv923/home/{self.data['2D'][1]}/\n\n",
-
-                "cd $HOME\n",
-                f"mkdir -p logs_{self.data['2D'][1]}/\n\n",
-                "cd $EPHEMERAL\n",
-                f"mkdir -p {self.var['dir']}/\n\n",
-
-                f"cp -r $PBS_O_WORKDIR/{self.var['dir']}/* {self.var['dir']}\n",
-                "cp -r $PBS_O_WORKDIR/Potentials/ .\n"
-            ])
-
-        filename = self.scripts + self.data['2D'][1] + "_transfer2.pbs"
-        with open(filename,'w') as f: 
-            f.writelines([
-                "#!/bin/bash\n",
-                "#PBS -l select=1:ncpus=1:mem=62gb:cpu_type=rome\n",
-                "#PBS -l walltime=00:30:00\n\n",
-                f"#PBS -o /rds/general/user/mv923/home/logs_{self.data['2D'][1]}/\n",
-                f"#PBS -e /rds/general/user/mv923/home/logs_{self.data['2D'][1]}/\n\n",
-
-                "cd $EPHEMERAL\n",
-                "#After the end of the run copy everything back to the parent directory\n",
-                f"cp -r ./{self.var['dir']}/* $PBS_O_WORKDIR/{self.var['dir']}\n\n"
-            ])
-
-# if __name__ == '__main__':
-#     parser = argparse.ArgumentParser(description="Run the program with an input file.")
-#     parser.add_argument("input_file", type=str, help="The input file to process")
-#     args = parser. 
+    
