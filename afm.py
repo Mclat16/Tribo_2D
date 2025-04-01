@@ -1,5 +1,6 @@
 from .tools import *
 from .build import *
+from .pot import *
 from .settings.file import *
 from .Potentials import *
 from .materials.Build2D import *
@@ -13,9 +14,6 @@ import numpy as np
 from ase import io, data
 from pathlib import Path
 from CifFile import ReadCif
-import configparser
-import argparse
-import shutil
 
 class afm:
     def __init__(self,input):
@@ -23,36 +21,39 @@ class afm:
         # Generate data and variables
 
         var = read_config(input) # Read input file settings
+
         self.group = ['2D' ,'sub', 'tip']
 
-        var['data'] = {mat: cifread(var[mat]['mat']) for mat in self.group}  # Read materials  
-        var['pot'] = {mat: count_elemtypes(var['data'][mat]['pot_path']) for mat in self.group}  # Count potentials  
-
-        var['data'] = {
-            mat['natype']: sum(var['pot'][mat].values()) 
-            for mat in self.group
-        }
+        var['data'] = {mat: cifread(var[mat]['cif_path']) for mat in self.group}  # Read materials  
+        var['pot'] = {mat: count_elemtypes(var[mat]['pot_path']) for mat in self.group}  # Count potentials  
+        
+        for mat in self.group:
+            var['data'][mat].update({
+                'natype':sum(var['pot'][mat].values())
+            })
 
         # Build one layer of 2D material to generate important variables
+        var['dir'] = f"scripts/{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}/tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
 
-        self.var = sheet(var)
 
         # Create file locations
-        self.var['dir'] = f"scripts/{self.var['data']['2D'][1]}/size_{self.var['2D']['x']}x_{self.var['2D']['y']}y/sub_{self.var['sub']['amorph']}{self.var['data']['sub'][1]}/tip_{self.var['tip']['amorph']}{self.var['data']['tip'][1]}_r{self.var['tip']['r']}/K{self.var['general']['temproom']}"
 
-        self.scripts = self.var['dir'] +"/scripts"
+        self.scripts = var['dir'] +"/scripts"
 
         dirs = ["visuals", "results", "system_build", "potentials", "scripts"]
 
         for d in dirs:
-            Path(self.var['dir'], d).mkdir(parents=True, exist_ok=True)
+            Path(var['dir'], d).mkdir(parents=True, exist_ok=True)
 
         files = ["list_system", "list_load", "list_slide"]
 
         for f in files:
-            with open(Path(self.var['dir'], "scripts", f), "w"):
+            with open(Path(var['dir'], "scripts", f), "w"):
                 pass 
+            
         
+        self.var = sheet(var)
+
 
         #Expand to multiple layers if required
 
@@ -114,8 +115,7 @@ class afm:
                     i += self.var['data'][g]['natype']
             
                 #generate potentials
-                settings_filename = f"{self.directory[layer]}/lammps/system.in.settings"
-                settings_afm(settings_filename,layer) 
+                settings_afm(self.var,layer) 
 
                 f.writelines([
                 "# Apply potentials\n\n",
@@ -155,7 +155,7 @@ class afm:
                 f"                variable find equal {self.var['general']['find']}\n",
                 "variable        num_floads equal 500\n",
                 "variable        r equal 0.0\n",
-                "variable        f equal 0.0\n"
+                "variable        f equal 0.0\n",
                 "variable        fincr equal ${find}/(${num_floads})\n",
                 "thermo_modify   lost ignore flush yes\n\n",
                 "#----------------- Apply pressure to the tip -------------\n\n",
@@ -165,7 +165,7 @@ class afm:
                 "# Set force variable\n\n",
                 "variable Fatom equal -v_f/(count(tip_fix)*1.602176565)\n",
                 "fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}\n",
-                "run 100 \n\n"
+                "run 100 \n\n",
                 "unfix forcetip\n\n",
                 "next i\n",
                 "jump SELF loop_load\n\n",

@@ -44,16 +44,16 @@ def settings_sheet(var,filename,layer):
                 mass=data.atomic_masses[data.atomic_numbers[m]] 
                 f.write(f"mass {elemgroup[0][m][0]}*{elemgroup[layer-1][m][-1]} {mass} #{m}\n")
 
-        f.write(f"pair_style hybrid {var['data']['2D']['pot_type'] * layer} lj/cut 8.0\n")
+        f.write(f"pair_style hybrid {var['2D']['pot_type'] * layer} lj/cut 8.0\n")
 
         for l in range(layer):
             potentials[l] = [
                 group_def[i][3] if group_def[i][4]==l+1 else "NULL"
-                for i in range(1,var['2D']['natype']*layer+1)
+                for i in range(1,var['data']['2D']['natype']*layer+1)
             ]            
-            f.write(f"pair_coeff * * {var['data']['2D']['pot_type']} {l+1} {var['data']['2D']['pot_path']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
+            f.write(f"pair_coeff * * {var['2D']['pot_type']} {l+1} {var['2D']['pot_path']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
         
-        if var['data']['2D']['pot_type'] == 'sw':
+        if var['2D']['pot_type'] == 'sw':
             for t in var['data']['2D']['elem_comp']:
                 for s in var['data']['2D']['elem_comp']:
                     e,sigma = LJparams(s,t)
@@ -140,7 +140,7 @@ def settings_afm(var,layer):
                         f.write(f"group {g}{n} type {' '.join(sub_group)}\n")
 
             f.writelines("group mobile union tip_thermo sub_thermo\n",
-                    f"pair_style hybrid {var['data']['sub']['pot_type']} {var['data']['tip']['pot_type']} {var['data']['2D']['pot_type'] * layer} lj/cut 8.0\n")
+                    f"pair_style hybrid {var['sub']['pot_type']} {var['tip']['pot_type']} {var['2D']['pot_type'] * layer} lj/cut 8.0\n")
         
         potentials = {}
         for g in group:
@@ -152,22 +152,22 @@ def settings_afm(var,layer):
                         for i in range(1,var['ngroups'][layer])
                     ]     
 
-                    f.write(f"pair_coeff * * {var['data']['2D']['pot_type']} {t+l+1} {var['data']['2D']['pot_path']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
+                    f.write(f"pair_coeff * * {var['2D']['pot_type']} {t+l+1} {var['2D']['pot_path']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
             else:
                 potentials[g]=[group_def[i][2] if any(g in group_def[i][0]) else "NULL"
                 for i in range(1,var['ngroups'][layer])]
-                f.write(f"pair_coeff * * sw {t} {var['data']['2D']['pot_type']}.sw {potentials[g]} # interlayer {g.capitalize()}\n")
+                f.write(f"pair_coeff * * sw {t} {var['2D']['pot_type']}.sw {potentials[g]} # interlayer {g.capitalize()}\n")
 
-        for t in var['data']['2D']['elements']:    
+        for t in var['2D']['elements']:    
             for key in ('sub','tip'):
-                for s in var['data'][key]['elements']:
+                for s in var[key]['elements']:
                     e,sigma = LJparams(t,s)
                     if len(elemgroup['2D'][t]) == 1 and layer == 1:
                         f.write(f"pair_coeff {elemgroup[key][t][0]}*{elemgroup[key][t][-1]} {elemgroup['2D'][0][t][0]} lj/cut {e} {sigma}\n")
                     else:  
                         f.write(f"pair_coeff {elemgroup[key][t][0]}*{elemgroup[key][t][-1]} {elemgroup['2D'][0][t][0]}*{elemgroup['2D'][-1][t][-1]} lj/cut {e} {sigma}\n")
             if layer>1:
-                for s in var['data']['2D']['elements']:
+                for s in var['2D']['elements']:
                     e,sigma = LJparams(s,t)
                     for l in range(layer-1):
                         t1 = f"{elemgroup['2D'][l][t][0]}*{elemgroup['2D'][l][t][-1]}"
@@ -179,7 +179,7 @@ def settings_afm(var,layer):
                         if elemgroup['2D'][l][t][0]>elemgroup['2D'][l+1][s][0]:
                             t1, t2 = t2, t1
                         f.write(f"pair_coeff {t1} {t2} lj/cut {e} {sigma} \n")
-        for s in var['data']['sub']['elements']:
-            for t in var['data']['tip']['elements']:
+        for s in var['sub']['elements']:
+            for t in var['tip']['elements']:
                 e,sigma = LJparams(s,t)
                 f.write(f"pair_coeff {elemgroup['sub'][t][0]}*{elemgroup['sub'][t][-1]} {elemgroup['tip'][t][0]}*{elemgroup['tip'][t][-1]}  lj/cut {e} {sigma} \n")

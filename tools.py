@@ -1,6 +1,6 @@
 from .settings import *
+from .pot import *
 from mp_api.client import MPRester
-import subprocess
 import os
 import json
 from .Potentials.lj_params import lj_params

@@ -1,5 +1,6 @@
 from .tools import *
 from .settings import *
+from .pot import *
 from ase import data
 import subprocess
 import os
@@ -210,14 +211,14 @@ def amorph(filename,tempmelt,var):
 
 def sheet(var):
 
-    x=var['2D'][1]
-    y=var['2D'][2]
+    x=var['2D']['x']
+    y=var['2D']['y']
 
-    filename = f"{var['dir']}/system_build/{var['data']['2D']['mat']}_1.lmp"
+    filename = f"{var['dir']}/system_build/{var['2D']['mat']}_1.lmp"
 
     multiples = {}
 
-    for element, cif_count in var['data']['2D']['elem_count'].items():
+    for element, cif_count in var['data']['2D']['elem_comp'].items():
         potential_count = var['pot']['2D'].get(element, 0)  # Get count from potential file or default to 0
         if cif_count > 0 and potential_count != 1:  # Avoid division by zero
             multiples[element] = potential_count / cif_count
@@ -233,21 +234,20 @@ def sheet(var):
             else:
                 raise ValueError('multiples must be the same')
     
-    Path('a.cif').unlink(missing_ok=True)
     Path(filename).unlink(missing_ok=True)
 
     if first_multiple == None:
-        atomsk_command = f'echo n | atomsk {var['data']['2D']['mat']}.cif -duplicate 2 2 1 -ow {filename} -v 0'
+        atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -duplicate 2 2 1 -ow {filename} -v 0"
 
     elif first_multiple < 1:
         raise ValueError('potential file or cif file is not formatted properly')
     
     else:
         if first_multiple ==1:
-            atomsk_command = f'echo n | atomsk {var['data']['2D']['mat']}.cif -ow {filename} -v 0'
+            atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -ow {filename} -v 0"
         else:
             m = np.sqrt(first_multiple)
-            atomsk_command = f'echo n | atomsk {var['data']['2D']['mat']}.cif -duplicate {int(m)} {int(m)} 1 {filename} -v 0'
+            atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -duplicate {int(m)} {int(m)} 1 {filename} -v 0"
             
     subprocess.run(atomsk_command, shell=True, check=True)
     
@@ -266,7 +266,7 @@ def sheet(var):
         stripped_line = line.strip()
         # Update the 'atom types' value
         if re.match(r'^\s*\d+\s+atom types\s*$', stripped_line):
-            lines[i]= f'   {var['data']['2D']['natype']}  atom types\n'
+            lines[i]= f"  {var['data']['2D']['natype']}  atom types\n"
             continue
 
         if line.strip() == 'Masses':
@@ -327,7 +327,7 @@ def sheet(var):
             
             if masses_section:
                 for l in range(1,var['data']['2D']['natype']+1):
-                    lines[i] += f'{l} {var['2D']['elem2D'][l][1]}  #{var['2D']['elem2D'][l][0]}\n'
+                    lines[i] += f"{l} {var['2D']['elem2D'][l][1]}  #{var['2D']['elem2D'][l][0]}\n"
                 break
             
         # Save modified file
@@ -335,24 +335,25 @@ def sheet(var):
             file.writelines(lines)
 
     if first_multiple == 1:
-        atomsk_command = f'echo n | atomsk {filename} -duplicate 2 2 1 -ow lmp -v 0'
+        atomsk_command = f"echo n | atomsk {filename} -duplicate 2 2 1 -ow lmp -v 0"
         subprocess.run(atomsk_command, shell=True, check=True)
 
-    atomsk_command = f'atomsk {filename} -orthogonal-cell -ow lmp -v 0'
+    atomsk_command = f"atomsk {filename} -orthogonal-cell -ow lmp -v 0"
     subprocess.run(atomsk_command, shell=True, check=True)
 
     dim = get_model_dimensions(filename)
     duplicate_a = round(x / dim['xhi'])
     duplicate_b = round(y / dim['yhi'])
 
-    atomsk_command = f'atomsk {filename} -duplicate {duplicate_a} {duplicate_b} 1 {filename} -v 0'
+    atomsk_command = f"atomsk {filename} -duplicate {duplicate_a} {duplicate_b} 1 -ow lmp -v 0"
     subprocess.run(atomsk_command, shell=True, check=True)
 
-    os.remove('a.cif')
+    charge2atom = f"lmp_charge2atom.sh {filename}"
+    subprocess.run(charge2atom, shell=True, check=True)
 
+    var['dim'] = get_model_dimensions(filename)
     center('2D',filename,var)
     var['2D']['lat_c'] = stacking(var,2)
-    var['dim'] = get_model_dimensions(filename)
 
     return var
 
@@ -360,7 +361,7 @@ def stacking(var,layer):
     
     settings_sheet(var,f"{var['dir']}/system_build/sheet.in.settings",layer) # generate file for potentials
 
-    filename = f"{var['dir']}/system_build/{var['data']['2D']['mat']}"
+    filename = f"{var['dir']}/system_build/{var['2D']['mat']}"
     lmp = lammps(cmdargs=['-log', 'none', '-screen', 'none',  '-nocite'])
 
     # lmp.file('lammps/in.init')
@@ -460,43 +461,43 @@ def center(system,filename,var):
     "neigh_modify    every 1 delay 0 check yes #every 5\n\n",
     f"region box block {var['dim']['xlo']} {var['dim']['xhi']} {var['dim']['ylo']} {var['dim']['yhi']} -50 50\n",
     f"create_box      {var['data'][system]['natype']} box\n\n",
-    # "read_data       %s/system_build/%s_%d.lmp" % (self.directory_l,self.data["2D"][1],self.layers),
-    f"read_data       {filename} add append"
+    f"read_data       {filename} add append\n"
     ])
     
-    elem = {}
+    elem = []
     i=0
     for element, count in var['pot'][system].items():
         if not count or count == 1:
-            elem[i] = element
+            elem.append(element)
             i+=1
         else:
             for t in range(1,count+1):
-                elem[i] = element + str(t)
+                elem.append(element + str(t))
                 i+=1
         mass=data.atomic_masses[data.atomic_numbers[element]]
-        lmp.command("mass %d %d" % (i+1, mass))
-
+        lmp.command(f"mass {i} {mass}\n")
+    print(elem)
+    print('printedstuff:', ' '.join(map(str, elem)))
     
     lmp.commands_list([
-    "pair_style sw",
-    f"pair_coeff * * {var['data'][system]['pot_path']} {' '.join(elem)}",
+    f"pair_style  {var[system]['pot_type']}\n",
+    f"pair_coeff * * {var[system]['pot_path']} {' '.join(elem)}\n",
 
-    "compute zmin all reduce min z",
-    "compute xmin all reduce min x",
-    "compute ymin all reduce min y",
+    "compute zmin all reduce min z\n",
+    "compute xmin all reduce min x\n",
+    "compute ymin all reduce min y\n",
     
-    "variable disp_z equal -c_zmin",
-    "variable disp_x equal -(c_xmin + (xhi-xlo)/2.0)",
-    "variable disp_y equal -(c_ymin + (yhi-ylo)/2.0)",
+    "variable disp_z equal -c_zmin\n",
+    "variable disp_x equal -(c_xmin+(xhi-xlo)/2.0)\n",
+    "variable disp_y equal -(c_ymin+(yhi-ylo)/2.0)\n",
     
-    "run 0",
+    "run 0\n\n",
 
-    "displace_atoms all move v_disp_x v_disp_y v_disp_z units box",
+    "displace_atoms all move v_disp_x v_disp_y v_disp_z units box\n\n",
 
-    f"change_box all z final {var['dim']['zlo']} {var['dim']['zhi']}",
-    "run 0",
-    f"write_data  {filename}"
+    f"change_box all z final {var['dim']['zlo']} {var['dim']['zhi']}\n",
+    "run 0\n",
+    f"write_data  {filename}\n"
     ])
     lmp.close
 
