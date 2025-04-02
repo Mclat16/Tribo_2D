@@ -1,0 +1,83 @@
+# LAMMPS input script for system build with input of substrate, graphene sheet and AFM tip
+
+clear
+
+units           metal
+atom_style      atomic
+neighbor        0.3 bin
+neigh_modify    every 1 delay 0 check yes #every 5
+
+boundary   	    p p f
+read_data       scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_2/data/load_12N.data # Read system data
+
+include         scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_2/lammps/system.in.settings
+
+#----------------- Create visualisation files ------------
+
+##########################################################
+#--------------------Tip Indentation---------------------#
+##########################################################
+#----------------- Apply constraints ---------------------
+
+#Fix the bottom layer of the base and the edges of the graphene
+
+fix             sub_fix sub_fix setforce 0.0 0.0 0.0 
+fix             tip_f tip_fix rigid/nve single force * off off on torque * off off off
+
+#----------------- Apply Langevin thermostat -------------
+
+compute         temp_tip tip_thermo temp/partial 0 1 0
+fix             lang_tip tip_thermo langevin 300 300 $(100.0*dt) 699483 zero yes
+fix_modify      lang_tip temp temp_tip
+
+compute         temp_base sub_thermo temp/partial 0 1 0
+fix             lang_bot sub_thermo langevin 300 300 $(100.0*dt) 2847563 zero yes
+fix_modify      lang_bot temp temp_base
+
+fix             nve_all all nve
+timestep        0.001
+thermo          100
+
+#----------------- Apply pressure to the tip -------------
+
+variable        Ftotal          equal -12/1.602176565
+variable        Fatom           equal v_Ftotal/count(tip_fix)
+fix             forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+
+##########################################################
+#------------------------Compute-------------------------#
+##########################################################
+
+#----------------- Calculate total friction --------------
+
+variable        fz_tip   equal  f_forcetip[3]*1.602176565
+
+variable        fx_spr   equal  f_spr[1]*1.602176565
+
+variable        fy_spr   equal f_spr[2]*1.602176565
+
+fix             fc_ave all ave/time 1 1000 1000 v_fz_tip v_fx_spr v_fy_spr file ./scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/results/fc_ave_slide_12nN_0angle_2ms_l2
+
+##########################################################
+#---------------------Spring Loading---------------------#
+##########################################################
+
+#----------------- Add damping force ---------------------
+
+fix             damp tip_fix viscous 9.986414949216288e-05
+
+#------------------Add lateral harmonic spring------------
+
+fix             spr tip_fix smd cvel 3.12075467163009 0.02 tether 1.0 0.0 NULL 0.0
+
+run 200000
+
+unfix spr
+
+variable        fx_spr   equal  0
+run 100000
+
+fix             spr tip_fix smd cvel  3.12075467163009 0.02 tether -1.0 -0.0 NULL 0.0
+
+run 200000
+write_data scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_2/data/slide_12nN_0angle_2ms.data
