@@ -28,10 +28,14 @@ class afm:
         var['pot'] = {mat: count_elemtypes(var[mat]['pot_path']) for mat in self.group}  # Count potentials  
         
         for mat in self.group:
-            var['data'][mat].update({
-                'natype':sum(var['pot'][mat].values())
-            })
-
+            if mat == '2D':
+                var['data'][mat].update({
+                    'natype':sum(var['pot'][mat].values())
+                })
+            else:
+                var['data'][mat].update({
+                    'natype':sum(var['pot'][mat].values())*3
+                })
         # Build one layer of 2D material to generate important variables
         var['dir'] = f"scripts/{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}/tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
 
@@ -58,17 +62,19 @@ class afm:
         #Expand to multiple layers if required
 
         self.var['ngroups'] = {}
+        self.directory = {}
         for l in self.var['2D']['layers']:
             self.directory[l] = Path(self.var['dir']) / f"l_{l}"
 
             for sub in ["data", "lammps"]:
                 (self.directory[l] / sub).mkdir(parents=True, exist_ok=True)
-            _ = stacking(self.var,l)
-            self.var['ngroups'][l] = self.var['2D']['natype']*l + self.var['data']['sub']['nelements']*3 + self.var['data']['tip']['nelements']*3
+            if l > 1:
+                _ = stacking(self.var,l)
+            self.var['ngroups'][l] = self.var['data']['2D']['natype']*l + self.var['data']['sub']['natype'] + self.var['data']['tip']['natype']
             
 
 
-        self.scan_angle = np.arange(self.var['tip']['scan_angle'][0],self.var['tip']['scan_angle'][1]+1,self.var['tip']['scan_angle'][2])
+        self.scan_angle = np.arange(self.var['general']['scan_angle'][0],self.var['general']['scan_angle'][1]+1,self.var['general']['scan_angle'][2])
 
         # Limit the number of visual files generated
         self.dump_load = [self.var['general']['force'][i] for i in range(4, len(self.var['general']['force']), 5)]
@@ -76,8 +82,8 @@ class afm:
         
         # Generate substrate and tip
 
-        tip(self.var)
-        sub(self.var)
+        tip_build(self.var)
+        sub_build(self.var)
 
     def system(self):
         for layer in self.var['2D']['layers']:
@@ -85,8 +91,8 @@ class afm:
             [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['2D']['lat_c']*(layer-1)/2]# Tip placement
             h_2D        = 10+self.var['2D']['lat_c']
 
-            filename = self.directory[layer] +"/lammps/" + "system.lmp"
-            with open(self.scripts + "/list_system", 'a') as f:
+            filename = f"{self.directory[layer]}/lammps/system.lmp"
+            with open(f"{self.scripts}/list_system", 'a') as f:
                 f.write(f"{filename}\n")
 
             with open(filename, 'w') as f:
@@ -96,23 +102,23 @@ class afm:
                     f"create_box      {self.var['ngroups'][layer]} box\n\n",
                     "#----------------- Read data files -----------------------\n\n",
                     f"read_data       {self.var['dir']}/system_build/sub.lmp add append group sub\n",
-                    f"read_data       {self.var['dir']}/system_build/tip.lmp add append shift {tip_x} {tip_y} {tip_z}  group tip\n",
-                    f"read_data       {self.var['dir']}/system_build/{self.var['data']['2D']['mat']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D\n\n"
+                    f"read_data       {self.var['dir']}/system_build/tip.lmp add append shift {tip_x} {tip_y} {tip_z}  group tip offset {self.var['data']['sub']['natype']} 0 0 0 0\n",
+                    f"read_data       {self.var['dir']}/system_build/{self.var['2D']['mat']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D offset {self.var['data']['tip']['natype']} 0 0 0 0\n\n"
                 ])
 
                 
-                for t in {self.var['ngroups'][layer]}:
-                    f.write(f"group type_{t} type {t}\n")
+                # for t in {self.var['ngroups'][layer]}:
+                #     f.write(f"group type_{t} type {t}\n")
 
-                i = 0
-                for g in self.group:
-                    for t in range(1,self.var['data'][g]['natype']+1):
-                        f.writelines([
-                            f"group {g}_{t} intersect type_{t} {g}\n",
-                            f"set group {g}_{t} type {i}\n",
-                            f"group {g}_{t} delete \n"
-                            ])
-                    i += self.var['data'][g]['natype']
+                # i = 0
+                # for g in self.group:
+                #     for t in range(1,self.var['data'][g]['natype']+1):
+                #         f.writelines([
+                #             f"group {g}_{t} intersect type_{t} {g}\n",
+                #             f"set group {g}_{t} type {i}\n",
+                #             f"group {g}_{t} delete \n"
+                #             ])
+                #     i += self.var['data'][g]['natype']
             
                 #generate potentials
                 settings_afm(self.var,layer) 
@@ -294,7 +300,7 @@ class afm:
         for layer in self.var['2D']['layers']:
             for force in self.var['general']['force']:
                 
-                if force == self.var['tip']['scan_angle'][3]:
+                if force == self.var['general']['scan_angle'][3]:
                     dump = False
                     scan_angle = self.scan_angle
                 else:
@@ -309,7 +315,7 @@ class afm:
                         
                     spring_x = np.cos(np.deg2rad(a))
                     spring_y = np.sin((a))
-                    filename = self.directory[layer] + "/lammps/" + "slide_" + str(force) +"N_"+ str(self.var['tip']['s']) + "ms_" + str(a) + "deg.lmp"
+                    filename = f"{self.directory[layer]}/lammps/slide_{force}N_{self.var['tip']['s'] }ms_{a}deg.lmp"
                     with open(self.scripts + "/list_slide", 'a') as f:
                         f.write(f"{filename}\n")
                     with open(filename, 'w') as f:
@@ -371,4 +377,69 @@ class afm:
                         f"write_data {self.directory[layer]}/data/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms.data"
                         ])
     
-    
+    def pbs(self):
+ 
+        pbs_type = ['system','load','slide']
+        for type in pbs_type:
+            filename = f"{self.scripts}/{self.var['2D']['mat']}_{type}.pbs"
+            PBS = '"${PBS_ARRAY_INDEX}p"'
+            PBS_log = "{PBS_ARRAY_INDEX}"
+            with open(f"{self.scripts}/list_{type}", 'r' ) as f:
+                n = len(f.readlines())
+            with open(filename,'w') as f: 
+                f.writelines([
+                    "#!/bin/bash\n",
+                    "#PBS -l select=1:ncpus=32:mem=62gb:mpiprocs=32:cpu_type=rome\n",
+                    "#PBS -l walltime=08:00:00\n",
+                    f"#PBS -J 1-{n}\n",
+                    f"#PBS -o /rds/general/user/mv923/home/{self.var['2D']['mat']}/\n",
+                    f"#PBS -e /rds/general/user/mv923/home/{self.var['2D']['mat']}/\n\n",
+
+                    "module purge\n",
+                    "module load tools/dev\n",
+                    "module load LAMMPS/23Jun2022-foss-2021b-kokkos\n",
+                    "#module load OpenMPI/4.1.4-GCC-11.3.0\n\n",
+
+                    "#Go to the temp directory (ephemeral) and create a new folder for this run\n",
+                    "cd $EPHEMERAL\n\n",
+
+
+                    "# $PBS_O_WORKDIR is the directory where the pbs script was sent from. Copy everything from the work directory to the temporary directory to prepare for the run\n\n",
+
+                    f"mpiexec lmp -l {self.var['2D']['mat']}/${PBS_log}.log -in $(sed -n {PBS} {self.var['dir']}/scripts/list_{type})\n\n",
+
+                    # "#After the end of the run copy everything back to the parent directory\n",
+                    # f"cp -r ./{self.var['dir']}/ $PBS_O_WORKDIR/{self.var['dir']}\n\n"
+                ])
+
+        filename = f"{self.scripts}/{self.var['2D']['mat']}_transfer.pbs"
+        with open(filename,'w') as f: 
+            f.writelines([
+                "#!/bin/bash\n",
+                "#PBS -l select=1:ncpus=1:mem=62gb:cpu_type=rome\n",
+                "#PBS -l walltime=00:30:00\n\n",
+                f"#PBS -o /rds/general/user/mv923/home/{self.var['2D']['mat']}/\n",
+                f"#PBS -e /rds/general/user/mv923/home/{self.var['2D']['mat']}/\n\n",
+
+                "cd $HOME\n",
+                f"mkdir -p logs_{self.var['2D']['mat']}/\n\n",
+                "cd $EPHEMERAL\n",
+                f"mkdir -p {self.var['dir']}/\n\n",
+
+                f"cp -r $PBS_O_WORKDIR/{self.var['dir']}/* {self.var['dir']}\n",
+                "cp -r $PBS_O_WORKDIR/Potentials/ .\n"
+            ])
+
+        filename = f"{self.scripts}/{self.var['2D']['mat']}_transfer2.pbs"
+        with open(filename,'w') as f: 
+            f.writelines([
+                "#!/bin/bash\n",
+                "#PBS -l select=1:ncpus=1:mem=62gb:cpu_type=rome\n",
+                "#PBS -l walltime=00:30:00\n\n",
+                f"#PBS -o /rds/general/user/mv923/home/logs_{self.var['2D']['mat']}/\n",
+                f"#PBS -e /rds/general/user/mv923/home/logs_{self.var['2D']['mat']}/\n\n",
+
+                "cd $EPHEMERAL\n",
+                "#After the end of the run copy everything back to the parent directory\n",
+                f"cp -r ./{self.var['dir']}/* $PBS_O_WORKDIR/{self.var['dir']}\n\n"
+            ])

@@ -9,14 +9,16 @@ import numpy as np
 import re
 from pathlib import Path
 
-def tip(var):
+def tip_build(var):
         
-    filename = f"{var['data']['tip']['mat']}.lmp"
-    
-    x = 2*var['data']['tip']['r']
+    filename = f"{var['tip']['mat']}.lmp"
+    settings = f"{var['dir']}/system_build/tip.in.settings"
+    settings_sb(var,settings,'tip')
+
+    x = 2*var['tip']['r']
     y = x
-    z = round(var['data']['tip']['r']/3)
-    side = round(2*var['data']['tip']['r']/2.5)
+    z = round(var['tip']['r']/3)
+    side = round(2*var['tip']['r']/2.5)
     
     if var['tip']['amorph'] == 'a':
 
@@ -34,30 +36,31 @@ def tip(var):
         
     else:
         slab_generator('tip',var,x,y,z)
-        filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['data']['tip']['mat']}.lmp")
+        filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['tip']['mat']}.lmp")
 
     lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
     lmp.commands_list([
-    "boundary p p p",
-    "units metal",
-    "atom_style      atomic",
-    f"region box block -{var['tip']['r']} {var['tip']['r']} -{var['tip']['r']} {var['tip']['r']} -3 {z}\n",
-    f"create_box      {var['data']['tip']['natype']} box",
-    f"read_data       {filename} add append shift -{var['tip']['r']} -{var['tip']['r']} 0",
-    f"region          afm_tip sphere 0 0 {var['tip']['r']} {var['tip']['r']} side in units box",
-    "region tip intersect 2 afm_tip box",
-    "group           tip region tip",
-    "group           box subtract all tip",
-    "delete_atoms    group box",
-    "change_box all x final -%f %f y final -%f %f z final -3 %f " % (side,side,side,side,z),
-    #------------------Save the final configuration to a data file
-    "reset_atoms     id",
-    "\n#Identify the top atoms of AFM tip\n\n",
-    f"region          tip_fix block INF INF INF INF {z-3} INF units box\n",
-    "group           tip_fix region tip_fix\n\n",
-    "#Identify thermostat region of AFM tip\n\n",
-    f"region          tip_thermo block INF INF INF INF {z-5} {z-3} units box\n",
-    "group           tip_thermo region tip_thermo\n\n",
+        "boundary p p p\n",
+        "units metal\n",
+        "atom_style      atomic\n",
+        f"region box block -{var['tip']['r']} {var['tip']['r']} -{var['tip']['r']} {var['tip']['r']} -3 {z}\n",
+        f"create_box      {var['data']['tip']['natype']} box\n",
+        f"read_data       {filename} add append shift -{var['tip']['r']} -{var['tip']['r']} 0\n",
+        f"include {settings}\n",
+        f"region          afm_tip sphere 0 0 {var['tip']['r']} {var['tip']['r']} side in units box\n",
+        "region tip intersect 2 afm_tip box\n",
+        "group           tip region tip\n",
+        "group           box subtract all tip\n",
+        "delete_atoms    group box\n",
+        f"change_box all x final -{side} {side} y final -{side} {side} z final -3 {z} \n",
+        #------------------Save the final configuration to a data file
+        "reset_atoms     id\n",
+        "\n#Identify the top atoms of AFM tip\n\n",
+        f"region          tip_fix block INF INF INF INF {z-3} INF units box\n",
+        "group           tip_fix region tip_fix\n\n",
+        "#Identify thermostat region of AFM tip\n\n",
+        f"region          tip_thermo block INF INF INF INF {z-5} {z-3} units box\n",
+        "group           tip_thermo region tip_thermo\n\n",
     ])
     
     for t in range(var['data']['tip']['natype']):
@@ -68,9 +71,7 @@ def tip(var):
     for t in range(var['data']['tip']['natype']):
         t+=1
         lmp.commands_list([
-            
             f"set group tip_{t} type {i}\n",
-
             f"group tip_fix_{t} intersect tip_fix tip_{t}\n",
             f"set group tip_fix_{t} type {i+1}\n",
             f"group tip_fix_{t} delete\n\n",
@@ -78,20 +79,22 @@ def tip(var):
             f"group tip_thermo_{t} intersect tip_thermo tip_{t}\n",
             f"set group tip_thermo_{t} type {i+2}\n",
             f"group tip_thermo_{t} delete\n\n"
-        ])
 
+            f"group tip_{t} delete\n\n"
+        ])
         i+=3
-        lmp.command(f"group tip_{t} delete\n\n")
 
     lmp.command(f"write_data      {var['dir']}/system_build/tip.lmp")
     
     lmp.close
 
 
-def sub(var):
+def sub_build(var):
     
-    filename = f"{var['data']['sub']['mat']}.lmp"
-    
+    filename = f"{var['sub']['mat']}.lmp"
+    settings = f"{var['dir']}/system_build/sub.in.settings"
+    settings_sb(var,settings,'sub')
+
     if var['sub']['amorph'] == 'a':
         
         am_filename = os.path.join(os.path.dirname(__file__), "materials", f"amor_{filename}")
@@ -108,21 +111,22 @@ def sub(var):
         filename = am_filename
     
     else:
-        slab_generator('sub',var['data']['2D']['x'],'sub',var['data']['2D']['y'],10)
-        filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['data']['sub']['mat']}.lmp")
+        slab_generator('sub',var['2D']['x'],'sub',var['2D']['y'],10)
+        filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['sub']['mat']}.lmp")
     
     lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
     lmp.commands_list([
-        "boundary p p p",
-        "units metal",
-        "atom_style      atomic",
+        "boundary p p p\n",
+        "units metal\n",
+        "atom_style      atomic\n",
         f"region box block {var['dim']['xlo']} {var['dim']['xhi']} {var['dim']['ylo']} {var['dim']['yhi']} -50 50\n",
         f"create_box       {var['data']['sub']['natype']} box\n\n",
-        f"read_data {filename}",
-        "group sub region box",
-        "group box subtract all sub",
-        "delete_atoms group box",
-        f"change_box all x final 0 {var['dim']['xhi']} y final 0 {var['dim']['yhi']} z final 0 10",
+        f"read_data {filename} add append\n",
+        f"include {settings}\n",
+        "group sub region box\n",
+        "group box subtract all sub\n",
+        "delete_atoms group box\n",
+        f"change_box all x final 0 {var['dim']['xhi']} y final 0 {var['dim']['yhi']} z final 0 10\n\n",
 
         "#Identify bottom atoms of Amorphous Silicon substrate\n\n",
         "region          sub_fix block INF INF INF INF INF 2 units box\n",
@@ -142,7 +146,6 @@ def sub(var):
     for t in range(var['data']['sub']['natype']):
         t+=1
         lmp.commands_list([
-            
             f"set group sub_{t} type {i}\n",
 
             f"group sub_fix_{t} intersect sub_fix sub_{t}\n",
@@ -152,10 +155,11 @@ def sub(var):
             f"group sub_thermo_{t} intersect sub_thermo sub_{t}\n",
             f"set group sub_thermo_{t} type {i+2}\n",
             f"group sub_thermo_{t} delete\n\n"
+
+            f"group sub_{t} delete\n\n"
         ])
 
         i+=3
-        lmp.command(f"group sub_{t} delete\n\n")
 
     lmp.command(f"write_data      {var['dir']}/system_build/sub.lmp")
     
@@ -170,41 +174,41 @@ def amorph(filename,tempmelt,var):
     # lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
     lmp = lammps()
     lmp.commands_list([
-    "boundary p p p",
-    "units metal",
-    "atom_style      atomic",
+    "boundary p p p\n",
+    "units metal\n",
+    "atom_style      atomic\n\n",
 
-    "read_data %s" % filename,
+    f"read_data {filename}\n\n" ,
     #------------------Apply potentials-----------------------
-    "pair_style sw",
-    "pair_coeff * * tribo_2D/Potentials/Si.sw Si",
+    "pair_style sw\n",
+    "pair_coeff * * tribo_2D/Potentials/Si.sw Si\n",
 
     ##########################################################
     #-------------------Energy Minimization------------------#
     ##########################################################
-    "min_style       cg",
-    "minimize        1.0e-4 1.0e-8 100 1000",
+    "min_style       cg\n",
+    "minimize        1.0e-4 1.0e-8 100 1000\n",
     ##########################################################
     #-------------------Equilibrate System-------------------#
     ##########################################################
-    "timestep        0.001",
-    "thermo          100",
-    "thermo_style    custom step temp pe ke etotal press",
+    "timestep        0.001\n",
+    "thermo          100\n",
+    "thermo_style    custom step temp pe ke etotal press\n",
     # Specify melting temperature and timestep
-    "velocity        all create %f 1234579 rot yes dist gaussian" % tempmelt,
-    "run             0",
+    f"velocity        all create {tempmelt} 1234579 rot yes dist gaussian\n",
+    "run             0\n",
     # Equilibration at temperature
-    "fix             melt all nvt temp %f %f $(100.0*dt)" % (tempmelt,tempmelt),
-    "run             5000",
-    "unfix           melt",
+    f"fix             melt all nvt temp {tempmelt} {tempmelt} $(100.0*dt)\n",
+    "run             5000\n",
+    "unfix           melt\n",
     
     ##########################################################
     #----------------------Quench System---------------------#
     ##########################################################
-    "fix             quench all nvt temp %f %f $(100.0*dt) " % (tempmelt, var['general']['temproom']),
-    "run             %d " % quench,
-    "unfix           quench ",
-    "write_data materials/amor_%s" % filename
+    f"fix             quench all nvt temp {tempmelt} {var['general']['temproom']} $(100.0*dt)\n ",
+    f"run             {quench}\n ",
+    "unfix           quench \n",
+    f"write_data materials/amor_{filename}"
     ])
     
     lmp.close
@@ -359,7 +363,7 @@ def sheet(var):
 
 def stacking(var,layer):
     
-    settings_sheet(var,f"{var['dir']}/system_build/sheet.in.settings",layer) # generate file for potentials
+    settings_sheet(var,f"{var['dir']}/system_build/sheet_{layer}.in.settings",layer) # generate file for potentials
 
     filename = f"{var['dir']}/system_build/{var['2D']['mat']}"
     lmp = lammps(cmdargs=['-log', 'none', '-screen', 'none',  '-nocite'])
@@ -375,8 +379,7 @@ def stacking(var,layer):
     f"create_box       {var['data']['2D']['natype']*layer} box\n\n",
     f"read_data       {filename}_1.lmp add append group layer_1",
     ])
-
-    if var['data']['2D']['stack_type'] == 'AB':
+    if var['2D']['stack_type'] == 'AB':
         x_shift = var['dim']['xhi']/4
     else:
         x_shift = 0
@@ -391,18 +394,16 @@ def stacking(var,layer):
         t+=1
         lmp.command(
         f"group 2D_{t} type {t}\n"
-        )
-    
+        )    
+
+    g = 0
     i = 0
     c = 0
-    g = 0
     for element,count in var['pot']['2D'].items():
         i += c
-
         for l in range(1,layer+1):
             for t in range(1,count+1):
                 n = i + t
-                print(n)
                 g+=1
                 lmp.commands_list([
                 f"group 2Dtype intersect 2D_{n} layer_{l}\n",
@@ -412,7 +413,7 @@ def stacking(var,layer):
                 c = count
 
     lmp.commands_list([
-    f"include         {var['dir']}/system_build/sheet.in.settings\n\n",
+    f"include         {var['dir']}/system_build/sheet_{layer}.in.settings\n\n",
     "#----------------- Minimize the system -------------------\n\n"
     "min_style       cg\n",
     "minimize        1.0e-4 1.0e-8 1000000 1000000\n\n",
@@ -435,7 +436,7 @@ def stacking(var,layer):
     "variable comz_2 equal c_l_2[3] \n\n "
     "run 0\n",
 
-    f"write_data  {filename}_{layer}"
+    f"write_data  {filename}_{layer}.lmp"
 
     ])
 
@@ -443,7 +444,6 @@ def stacking(var,layer):
     # Extract center of mass (COM) for each layer
     com_l1 = lmp.extract_variable('comz_1', None,0)  # Returns an array [x, y, z]
     com_l2 = lmp.extract_variable('comz_2', None,0)  # Returns an array [x, y, z]
-    print('centers of mass',com_l1, com_l2)
     # Compute lattice constant from the z-coordinates
     lat_c = com_l2 - com_l1  # Subtract z-components
 
@@ -476,8 +476,6 @@ def center(system,filename,var):
                 i+=1
         mass=data.atomic_masses[data.atomic_numbers[element]]
         lmp.command(f"mass {i} {mass}\n")
-    print(elem)
-    print('printedstuff:', ' '.join(map(str, elem)))
     
     lmp.commands_list([
     f"pair_style  {var[system]['pot_type']}\n",
@@ -502,9 +500,10 @@ def center(system,filename,var):
     lmp.close
 
 def slab_generator(system,var,x,y,z):
-    filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['data'][system]['mat']}.lmp")
+    filename = os.path.join(os.path.dirname(__file__), "materials", f"{var[system]['mat']}.lmp")
     Path(filename).unlink(missing_ok=True)
-    atomsk_command = f"atomsk {var['data'][system]['cif_path']} -duplicate 2 2 1 -orthogonal-cell a.cif -ow -v 0"
+    Path('a.cif').unlink(missing_ok=True)
+    atomsk_command = f"atomsk {var[system]['cif_path']} -duplicate 2 2 1 -orthogonal-cell a.cif -ow -v 0"
     subprocess.run(atomsk_command, shell=True, check=True)
     cif = cifread("a.cif")
     x2 = round((x+15)/cif["lat_a"])
