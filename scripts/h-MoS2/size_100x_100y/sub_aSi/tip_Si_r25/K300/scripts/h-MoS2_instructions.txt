@@ -3,25 +3,25 @@
 # https://icl-rcs-user-guide.readthedocs.io/en/latest/rds/paths/ 
 
 # Next, we need to transfer the files to the Ephemeral directory, run the following command:
-qsub scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scriptsh-MoS2_transfer.pbs
+qsub scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scripts/h-MoS2_transfer.pbs
 
 # Once this is done, you can run the system intialisation as follows:
-qsub -W depend=afterok:<XXXX.pbs> scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scriptsh-MoS2_system.pbs
+qsub -W depend=afterok:<XXXX.pbs> scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scripts/h-MoS2_system.pbs
 
 # Where <XXXX.pbs> is the job number given to you after submitting transfer.pbs
 
 # Then we can run the loading as follows:
-qsub -W depend=afterany:<XXXX[].pbs> scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scriptsh-MoS2_load.pbs
+qsub -W depend=afterany:<XXXX[].pbs> scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scripts/h-MoS2_load.pbs
 
 # Where <XXXX[].pbs> is the job number given to you after submitting system.pbs
 
 # Finally, we can run the sliding as follows:
-qsub -W depend=afterany:<XXXX[].pbs> scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scriptsh-MoS2_slide.pbs
+qsub -W depend=afterany:<XXXX[].pbs> scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scripts/h-MoS2_slide.pbs
 
 # Where <XXXX[].pbs> is the job number given to you after submitting load.pbs
 
 # Transfer your results back to the home directory with:
-qsub -W depend=afterany:<XXXX[].pbs> scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scriptsh-MoS2_transfer2.pbs
+qsub -W depend=afterany:<XXXX[].pbs> scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/scripts/h-MoS2_transfer2.pbs
 
 # Where <XXXX[].pbs> is the job number given to you after submitting slide.pbs
 

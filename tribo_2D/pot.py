@@ -224,3 +224,45 @@ def settings_sb(var,filename,system):
         f.writelines([
             f"pair_style {var[system]['pot_type']}\n",
             f"pair_coeff * * {var[system]['pot_path']} {' '.join((potentials))}\n"])
+        
+
+def settings_ob(var,filename,system):
+    
+    group_def = {}
+    elemgroup = {}
+    potentials= {}
+    arr = []
+    i=0  
+    c = 0  
+
+    with open(filename, 'w') as f:
+
+        for element, count in var['pot'][system].items():
+            i += c
+            if not count or count == 1:
+                arr.append(element)
+            else:
+                for t in range(1,count+1):
+                    arr.append(element + str(t))
+        
+            for t in range(1,count+1):
+                n = i + t
+                group_def.update({n: [f"{system}_t{n}", str(n),str(element),arr[n-1]]})
+                elemgroup.setdefault(element, []).append(n)
+                i+=1
+                c = count
+
+    
+        for m in var['data'][system]['elem_comp']: 
+            mass=data.atomic_masses[data.atomic_numbers[m]] 
+            if len(elemgroup[m])==1:
+                f.write(f"mass {elemgroup[m][0]} {mass} #{m}\n")
+            else:
+                f.write(f"mass {elemgroup[m][0]}*{elemgroup[m][-1]} {mass} #{m}\n")
+        
+        potentials = [group_def[i][2] for i in range(1,len(arr)+1)]
+                    
+        f.writelines([
+            f"pair_style {var[system]['pot_type']}\n",
+            f"pair_coeff * * {var[system]['pot_path']} {' '.join((potentials))}\n"])
+        

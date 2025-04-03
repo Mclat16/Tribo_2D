@@ -2,8 +2,8 @@
 #PBS -l select=1:ncpus=32:mem=62gb:mpiprocs=32:cpu_type=rome
 #PBS -l walltime=08:00:00
 #PBS -J 1-3
-#PBS -o /rds/general/user/mv923/home/h-MoS2/
-#PBS -e /rds/general/user/mv923/home/h-MoS2/
+#PBS -o /rds/general/user/mv923/home/logs_h-MoS2/
+#PBS -e /rds/general/user/mv923/home/logs_h-MoS2/
 
 module purge
 module load tools/dev

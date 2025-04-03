@@ -22,28 +22,30 @@ import shutil
 class sheet:
     def __init__(self,input):
 
-        self.var = read_config(input)
+        var = read_config(input) # Read input file settings
 
-        self.var['data'] = {'2D': self.matsearch(self.var['2D']['mat'])}
+        var['data'] = {'2D': cifread(var['2D']['cif_path'])}  # Read materials  
+        var['pot'] = {'2D': count_elemtypes(var['2D']['pot_path'])}  # Count potentials  
         
-        self.directory = f"sheetvsheet/{self.var['data']['2D'][1]}/size_{self.var['2D']['x']}x_{self.var['2D']['y']}y/{self.var['general']['temproom']}"
+        var['data']['2D'].update({
+            'natype':sum(var['pot']['2D'].values())
+            })
         
-        Path(self.directory +"/data").mkdir(parents=True, exist_ok=True)
-        Path(self.directory +"/system_build").mkdir(parents=True, exist_ok=True)
-        Path(self.directory +"/visuals").mkdir(parents=True, exist_ok=True)
-        Path(self.directory +"/results").mkdir(parents=True, exist_ok=True)
-        Path(self.directory +"/lammps").mkdir(parents=True, exist_ok=True)
-        Path(self.directory +"/potentials").mkdir(parents=True, exist_ok=True)
-        self.scripts = self.directory + "/scripts/"
+        var['dir'] = f"scripts/sheetvsheet/{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/K{self.var['general']['temproom']}"
+        
+        self.scripts = var['dir'] +"/scripts"
+        dirs = ["data","lammps","visuals", "results", "system_build", "potentials", "scripts"]
+        for d in dirs:
+            Path(var['dir'], d).mkdir(parents=True, exist_ok=True)
+
         Path(self.scripts).mkdir(parents=True, exist_ok=True)
-        with open(self.scripts + "/sheetvsheet", 'w'):
+        with open(f"{self.scripts}/sheetvsheet", 'w'):
             pass
 
-        self.elem2D,self.natype = build2D(self.var,2)
-
+        self.var = sheet(var)
         self.var['dim'] = {}
+
         self.file = f"{self.directory}/system_build/{self.var['data']['2D'][1]}_4.lmp"
-        self.var['dim']['xlo'], self.var['dim']['xhi'], self.var['dim']['ylo'], self.var['dim']['yhi'], self.var['dim']['zlo'], self.var['dim']['zhi'] = get_model_dimensions(file)
         self.var['ngroups'] = self.natype*4
 
     def system(self):
@@ -182,66 +184,3 @@ class sheet:
                         "#----------------- Save final configuration in data file -\n",
                         "write_data     graphvgraph.data\n"
                     ])
-
-
-    def settings(self,filename):
-        """Writes the LAMMPS input file content to the specified filename.
-        Args:
-        filename (str): The name of the file to write to.
-        """
-        with open(filename, 'w') as f:
-
-            arr = self.elem2D.copy()
-            
-            count = {}
-            result=[]
-            for i in range(len(arr)):
-                element = arr[i]
-                count[element] = count.get(element, 0) + 1
-                result.append(element + str(count[element]))
-            for i in range(len(arr)):
-                element = arr[i]
-                if count[element] > 1:
-                    arr[i]=result[i]
-
-            # Set masses and create groups
-            i = 0
-            group_def = {}
-            elemgroup = {}
-            potentials= {}
-
-            for t in range(self.natype):
-                m = self.elem2D[t]
-
-                for l in range(4):
-                    group_def.update({i: [f"2D_l{l+1}_t{t+1}", str(i+1),str(m),arr[t],l+1]})
-                    i+=1
-                    elemgroup[l][m].append(i)
-            
-            for m in self.var['data']['2D'][3]: 
-                    mass=data.atomic_masses[data.atomic_numbers[m]] 
-                    f.write(f"mass {elemgroup[0][m][0]}*{elemgroup[-1][m][-1]} {mass} #{m} layer {l+1}\n")
-            
-            f.write(f"pair_style hybrid {'sw ' * 4} lj/cut 8.0\n")
-            
-            for l in range(4):
-                potentials['2D'][l] = [
-                    group_def[i][3] if any("2D_l"+str(l+1) in group_def[i][0]) else "NULL"
-                    for i in range(self.var['ngroups'])
-                ]
-                f.write(f"pair_coeff * * sw {i} {self.directory}/potentials/{self.var['data']['2D'][1]}.sw {potentials['2D'][l]} # interlayer '2D' Layer {l+1}\n")
-                i += 1 
-            
-            for t in self.var['data']['2D'][3]:
-                for s in self.var['data']['2D'][3]:
-                    e,sigma = LJparams(s,t)
-                    for l in range(4):
-                        t1 = f"{elemgroup['2D'][l][t][0]}*{elemgroup['2D'][l][t][-1]}"
-                        t2 = f"{elemgroup['2D'][l+1][s][0]}*{elemgroup['2D'][-1][s][-1]}"
-                        if elemgroup['2D'][l][t][0] == elemgroup['2D'][l][t][-1]:
-                            t1 = f"{elemgroup['2D'][l][t][0]}"
-                        if elemgroup['2D'][l+1][s][0] == elemgroup['2D'][-1][s][-1]:
-                            t2 = f"{elemgroup['2D'][l+1][s][0]}"
-                        if elemgroup['2D'][l][t][0]>elemgroup['2D'][l+1][s][0]:
-                            t1, t2 = t2, t1
-                        f.write(f"pair_coeff {t1} {t2} lj/cut {e} {sigma} \n")

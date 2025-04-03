@@ -2,8 +2,8 @@
 #PBS -l select=1:ncpus=1:mem=62gb:cpu_type=rome
 #PBS -l walltime=00:30:00
 
-#PBS -o /rds/general/user/mv923/home/h-MoS2/
-#PBS -e /rds/general/user/mv923/home/h-MoS2/
+#PBS -o /rds/general/user/mv923/home/scripts/h-MoS2/
+#PBS -e /rds/general/user/mv923/home/scripts/h-MoS2/
 
 cd $HOME
 mkdir -p logs_h-MoS2/
@@ -12,4 +12,4 @@ cd $EPHEMERAL
 mkdir -p scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/
 
 cp -r $PBS_O_WORKDIR/scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/* scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300
-cp -r $PBS_O_WORKDIR/Potentials/ .
+cp -r $PBS_O_WORKDIR/tribo_2DPotentials/ .

@@ -14,8 +14,8 @@ create_box      30 box
 #----------------- Read data files -----------------------
 
 read_data       scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/sub.lmp add append group sub
-read_data       scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/tip.lmp add append shift 50.945063434952 49.63468402359 58.51477845108371  group tip offset 3 0 0 0 0
-read_data       scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/h-MoS2_2.lmp add append shift 0.0 0.0 17.02955690216741 group 2D offset 3 0 0 0 0
+read_data       scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/tip.lmp add append shift 50.945063434952 49.63468402359 58.514778451083714  group tip offset 3 0 0 0 0
+read_data       scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/h-MoS2_2.lmp add append shift 0.0 0.0 14.5 group 2D offset 6 0 0 0 0
 
 # Apply potentials
 

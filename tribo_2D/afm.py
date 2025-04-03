@@ -58,7 +58,6 @@ class afm:
         
         self.var = sheet(var)
 
-
         #Expand to multiple layers if required
 
         self.var['ngroups'] = {}
@@ -89,7 +88,7 @@ class afm:
         for layer in self.var['2D']['layers']:
 
             [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['2D']['lat_c']*(layer-1)/2]# Tip placement
-            h_2D        = 10+self.var['2D']['lat_c']
+            h_2D        = 14.5
 
             filename = f"{self.directory[layer]}/lammps/system.lmp"
             with open(f"{self.scripts}/list_system", 'a') as f:
@@ -103,23 +102,10 @@ class afm:
                     "#----------------- Read data files -----------------------\n\n",
                     f"read_data       {self.var['dir']}/system_build/sub.lmp add append group sub\n",
                     f"read_data       {self.var['dir']}/system_build/tip.lmp add append shift {tip_x} {tip_y} {tip_z}  group tip offset {self.var['data']['sub']['natype']} 0 0 0 0\n",
-                    f"read_data       {self.var['dir']}/system_build/{self.var['2D']['mat']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D offset {self.var['data']['tip']['natype']} 0 0 0 0\n\n"
+                    f"read_data       {self.var['dir']}/system_build/{self.var['2D']['mat']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D offset {self.var['data']['tip']['natype']+self.var['data']['sub']['natype']} 0 0 0 0\n\n"
                 ])
 
                 
-                # for t in {self.var['ngroups'][layer]}:
-                #     f.write(f"group type_{t} type {t}\n")
-
-                # i = 0
-                # for g in self.group:
-                #     for t in range(1,self.var['data'][g]['natype']+1):
-                #         f.writelines([
-                #             f"group {g}_{t} intersect type_{t} {g}\n",
-                #             f"set group {g}_{t} type {i}\n",
-                #             f"group {g}_{t} delete \n"
-                #             ])
-                #     i += self.var['data'][g]['natype']
-            
                 #generate potentials
                 settings_afm(self.var,layer) 
 
@@ -392,8 +378,8 @@ class afm:
                     "#PBS -l select=1:ncpus=32:mem=62gb:mpiprocs=32:cpu_type=rome\n",
                     "#PBS -l walltime=08:00:00\n",
                     f"#PBS -J 1-{n}\n",
-                    f"#PBS -o /rds/general/user/mv923/home/{self.var['2D']['mat']}/\n",
-                    f"#PBS -e /rds/general/user/mv923/home/{self.var['2D']['mat']}/\n\n",
+                    f"#PBS -o /rds/general/user/mv923/home/logs_{self.var['2D']['mat']}/\n",
+                    f"#PBS -e /rds/general/user/mv923/home/logs_{self.var['2D']['mat']}/\n\n",
 
                     "module purge\n",
                     "module load tools/dev\n",
@@ -418,8 +404,8 @@ class afm:
                 "#!/bin/bash\n",
                 "#PBS -l select=1:ncpus=1:mem=62gb:cpu_type=rome\n",
                 "#PBS -l walltime=00:30:00\n\n",
-                f"#PBS -o /rds/general/user/mv923/home/{self.var['2D']['mat']}/\n",
-                f"#PBS -e /rds/general/user/mv923/home/{self.var['2D']['mat']}/\n\n",
+                f"#PBS -o /rds/general/user/mv923/home/scripts/{self.var['2D']['mat']}/\n",
+                f"#PBS -e /rds/general/user/mv923/home/scripts/{self.var['2D']['mat']}/\n\n",
 
                 "cd $HOME\n",
                 f"mkdir -p logs_{self.var['2D']['mat']}/\n\n",
@@ -427,7 +413,7 @@ class afm:
                 f"mkdir -p {self.var['dir']}/\n\n",
 
                 f"cp -r $PBS_O_WORKDIR/{self.var['dir']}/* {self.var['dir']}\n",
-                "cp -r $PBS_O_WORKDIR/Potentials/ .\n"
+                "cp -r $PBS_O_WORKDIR/tribo_2DPotentials/ .\n"
             ])
 
         filename = f"{self.scripts}/{self.var['2D']['mat']}_transfer2.pbs"
@@ -441,7 +427,8 @@ class afm:
 
                 "cd $EPHEMERAL\n",
                 "#After the end of the run copy everything back to the parent directory\n",
-                f"cp -r ./{self.var['dir']}/* $PBS_O_WORKDIR/{self.var['dir']}\n\n"
+                f"cp -r ./{self.var['dir']}/* $PBS_O_WORKDIR/{self.var['dir']}\n\n",
+                f"rm -r ./scripts/{self.var['2D']['mat']}\n\n"
             ])
         
         filename = f"{self.scripts}/{self.var['2D']['mat']}_instructions.txt"
@@ -452,25 +439,25 @@ class afm:
                 "# https://icl-rcs-user-guide.readthedocs.io/en/latest/rds/paths/ \n\n",
 
                 "# Next, we need to transfer the files to the Ephemeral directory, run the following command:\n",
-                f"qsub {self.scripts}{self.var['2D']['mat']}_transfer.pbs\n\n",
+                f"qsub {self.scripts}/{self.var['2D']['mat']}_transfer.pbs\n\n",
 
                 "# Once this is done, you can run the system intialisation as follows:\n",
-                f"qsub -W depend=afterok:<XXXX.pbs> {self.scripts}{self.var['2D']['mat']}_system.pbs\n\n",
+                f"qsub -W depend=afterok:<XXXX.pbs> {self.scripts}/{self.var['2D']['mat']}_system.pbs\n\n",
 
                 "# Where <XXXX.pbs> is the job number given to you after submitting transfer.pbs\n\n",
                 
                 "# Then we can run the loading as follows:\n",
-                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}{self.var['2D']['mat']}_load.pbs\n\n",
+                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}/{self.var['2D']['mat']}_load.pbs\n\n",
                 
                 "# Where <XXXX[].pbs> is the job number given to you after submitting system.pbs\n\n",
                 
                 "# Finally, we can run the sliding as follows:\n",
-                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}{self.var['2D']['mat']}_slide.pbs\n\n",
+                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}/{self.var['2D']['mat']}_slide.pbs\n\n",
 
                 "# Where <XXXX[].pbs> is the job number given to you after submitting load.pbs\n\n",
                 
                 "# Transfer your results back to the home directory with:\n",
-                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}{self.var['2D']['mat']}_transfer2.pbs\n\n",
+                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}/{self.var['2D']['mat']}_transfer2.pbs\n\n",
 
                 "# Where <XXXX[].pbs> is the job number given to you after submitting slide.pbs\n\n",
 

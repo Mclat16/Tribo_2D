@@ -9,3 +9,5 @@ cd $EPHEMERAL
 #After the end of the run copy everything back to the parent directory
 cp -r ./scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/* $PBS_O_WORKDIR/scripts/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300
 
+rm -r ./scripts/h-MoS2
+

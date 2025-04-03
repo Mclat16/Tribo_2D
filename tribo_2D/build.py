@@ -21,21 +21,21 @@ def tip_build(var):
     side = round(2*var['tip']['r']/2.5)
     
     if var['tip']['amorph'] == 'a':
-
         am_filename = os.path.join(os.path.dirname(__file__), "materials", f"amor_{filename}")
-            
+        filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['tip']['mat']}.lmp")
+
         if os.path.exists(am_filename):
             print("File exists")
         else:
-            slab_generator('tip',var, 200, 200, 20)
-            amorph(filename, 2500,var)
+            slab_generator('tip',var, 200, 200, 50)
+            amorph('tip',filename, am_filename, 2500,var)
             os.remove(filename)
             print("File Removed")
         
         filename = am_filename
         
     else:
-        slab_generator('tip',var,x,y,z)
+        slab_generator('tip',var,200,200,50)
         filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['tip']['mat']}.lmp")
 
     lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
@@ -45,7 +45,7 @@ def tip_build(var):
         "atom_style      atomic\n",
         f"region box block -{var['tip']['r']} {var['tip']['r']} -{var['tip']['r']} {var['tip']['r']} -3 {z}\n",
         f"create_box      {var['data']['tip']['natype']} box\n",
-        f"read_data       {filename} add append shift -{var['tip']['r']} -{var['tip']['r']} 0\n",
+        f"read_data       {filename} add append shift -{var['tip']['r']} -{var['tip']['r']} -10\n",
         f"include {settings}\n",
         f"region          afm_tip sphere 0 0 {var['tip']['r']} {var['tip']['r']} side in units box\n",
         "region tip intersect 2 afm_tip box\n",
@@ -84,7 +84,7 @@ def tip_build(var):
         ])
         i+=3
 
-    lmp.command(f"write_data      {var['dir']}/system_build/tip.lmp")
+    lmp.commands_list([f"write_data      {var['dir']}/system_build/tip.lmp"])
     
     lmp.close
 
@@ -98,12 +98,13 @@ def sub_build(var):
     if var['sub']['amorph'] == 'a':
         
         am_filename = os.path.join(os.path.dirname(__file__), "materials", f"amor_{filename}")
-            
+        filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['sub']['mat']}.lmp")
+
         if os.path.exists(am_filename):
             print("File exists")
         else:
             slab_generator('sub',var, 200, 200, 20)
-            amorph(filename, 2500,var)
+            amorph('sub',filename, am_filename,2500,var)
             
             os.remove(filename)
             print("File Removed")
@@ -167,22 +168,21 @@ def sub_build(var):
 
 
 
-def amorph(filename,tempmelt,var):
+def amorph(system,filename,am_filename, tempmelt,var):
     
     quench = (tempmelt-var['general']['temproom'])*100
-    
     # lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
+    settings = f"{var['dir']}/system_build/sub.in.settings"
+    settings_ob(var,settings,system)
     lmp = lammps()
     lmp.commands_list([
     "boundary p p p\n",
     "units metal\n",
     "atom_style      atomic\n\n",
 
-    f"read_data {filename}\n\n" ,
+    f"read_data {filename}\n\n", 
     #------------------Apply potentials-----------------------
-    "pair_style sw\n",
-    "pair_coeff * * tribo_2D/Potentials/Si.sw Si\n",
-
+    f"include {settings}\n\n",
     ##########################################################
     #-------------------Energy Minimization------------------#
     ##########################################################
@@ -208,7 +208,7 @@ def amorph(filename,tempmelt,var):
     f"fix             quench all nvt temp {tempmelt} {var['general']['temproom']} $(100.0*dt)\n ",
     f"run             {quench}\n ",
     "unfix           quench \n",
-    f"write_data materials/amor_{filename}"
+    f"write_data {am_filename}"
     ])
     
     lmp.close
