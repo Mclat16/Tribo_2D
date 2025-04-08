@@ -1,0 +1,100 @@
+# LAMMPS input script for system build with input of substrate, graphene sheet and AFM tip
+
+clear
+
+units           metal
+atom_style      molecular
+neighbor        0.3 bin
+neigh_modify    every 1 delay 0 check yes #every 5
+
+boundary   	    p p f
+#------------------Create Geometry------------------------
+#----------------- Define the simulation box -------------
+region          box block 0.0 101.890126869904 0.0 99.26936804718 -40.0 40.0 units box
+create_box      48 box bond/types 1 extra/bond/per/atom 100
+
+read_data       scripts/sheetvsheet/h-MoS2/size_100x_100y/K0/system_build/h-MoS2_4.lmp add append group bot
+
+#----------------- Create visualisation files ------------
+
+ dump            sys all atom 100 ./scripts/sheetvsheet/h-MoS2/size_100x_100y/K0/visuals/load_30N_58angle_1ms.lammpstrj
+
+include scripts/sheetvsheet/h-MoS2/size_100x_100y/K0/lammps/system.in.settings
+# Create bonds
+bond_style harmonic
+bond_coeff 1 5 4.241616279297368 
+create_bonds many layer_1 layer_2 1 3.991616279297368 4.491616279297368
+create_bonds many layer_3 layer_4 1 3.991616279297368 4.491616279297368
+
+ ##########################################################
+#-------------------Energy Minimization------------------#
+##########################################################
+
+ min_style       cg
+minimize        1.0e-4 1.0e-8 100000 100000
+
+ ##########################################################
+#------------------- Apply Constraints ------------------#
+##########################################################
+
+ #----------------- Apply Langevin thermostat -------------
+group center union layer_2 layer_3
+ velocity        center create 0 492847948
+fix             lang center langevin 0 0 $(100.0*dt) 2847563 zero yes
+
+ fix             nve_all all nve
+
+ timestep        0.001
+thermo          100
+
+ compute COM_top layer_4 com
+variable comx_top equal c_COM_top[1] 
+variable comy_top equal c_COM_top[2] 
+variable comz_top equal c_COM_top[3] 
+
+ compute COM_ctop layer_3 com
+variable comx_ctop equal c_COM_ctop[1] 
+variable comy_ctop equal c_COM_ctop[2] 
+variable comz_ctop equal c_COM_ctop[3] 
+
+ compute COM_cbot layer_2 com
+variable comx_cbot equal c_COM_cbot[1] 
+variable comy_cbot equal c_COM_cbot[2] 
+variable comz_cbot equal c_COM_cbot[3] 
+
+ fix             fstage_top layer_4 rigid single force * on on off torque * off off off
+fix             fsbot layer_1 setforce 0.0 0.0 0.0 
+ velocity        layer_1 set 0.0 0.0 0.0 units box
+
+  run 1000
+
+ variable omega equal 58/10000
+fix rot layer_4 move rotate ${comx_top} ${comy_top} ${comz_top} 0 0 1 ${omega}
+
+ run             10000
+
+ unfix rot
+
+unfix fstage_top
+fix             fstage_top layer_4 rigid single force * off off on torque * off off off
+
+variable Fatom equal -30/(count(layer_4)*1.602176565)
+fix force layer_4 aveforce 0.0 0.0 ${Fatom}
+
+run             10000
+
+ variable        fx   equal  fstage_top[1]*1.602176565
+variable        fy   equal  fstage_top[2]*1.602176565
+variable        fz   equal  f_force[3]*1.602176565
+
+----------------- Output values -------------------------
+fix             fc_ave all ave/time 1 1000 1000 v_fx v_fy v_fz v_comx_ctop v_comy_ctop v_comz_ctop v_comx_cbot v_comy_cbot v_comz_cbot file scripts/sheetvsheet/h-MoS2/size_100x_100y/K0/data/30nN_58angle_1ms
+
+velocity        stage_top set 1 0.0 0.0 run             100000
+
+ ##########################################################
+#-----------------------Write Data-----------------------#
+##########################################################
+
+ #----------------- Save final configuration in data file -
+write_data     scripts/sheetvsheet/h-MoS2/size_100x_100y/K0/data/30nN_58angle_1ms.data

@@ -223,13 +223,13 @@ def sheet(var):
     multiples = {}
 
     for element, cif_count in var['data']['2D']['elem_comp'].items():
-        potential_count = var['pot']['2D'].get(element, 0)  # Get count from potential file or default to 0
-        if cif_count > 0 and potential_count != 1:  # Avoid division by zero
+        potential_count = var['pot']['2D'].get(element, 0)  
+        if cif_count > 0 and potential_count != 1:  
             multiples[element] = potential_count / cif_count
         else:
-            multiples[element] = None  # If the CIF count is zero (which shouldn't happen), mark as None
+            multiples[element] = None  
     
-    first_multiple = next(iter(multiples.values()))  # Get the first multiple
+    first_multiple = next(iter(multiples.values()))  
 
     for multiple in multiples.values():
         if multiple != first_multiple:  
@@ -261,43 +261,43 @@ def sheet(var):
     modified_lines = []
     masses_section = False
     atoms_section = False
-    a = 1  # To track incremental atom type assignment
+    a = 1 
 
-    # Step 2: Create a dictionary of atom types from the 'Masses' section
+
     atom_types = {}
     var['2D']['elem2D'] = {}
     for i, line in enumerate(lines):
         stripped_line = line.strip()
-        # Update the 'atom types' value
+
         if re.match(r'^\s*\d+\s+atom types\s*$', stripped_line):
             lines[i]= f"  {var['data']['2D']['natype']}  atom types\n"
             continue
 
         if line.strip() == 'Masses':
             masses_section = True
-            continue  # Skip the 'Masses' header line
+            continue  
         
         if masses_section:
             if 'Atoms' in line:
-                 # End of the Masses section
+                 
                 break
             
             parts = line.split()
             if len(parts) < 2:
-                continue  # Skip empty lines
+                continue  
 
             try:
-                atom_type_id = int(parts[0])  # First column is the atom type ID (1, 2, ...)
-                mass = float(parts[1])  # Second column is the mass
-                # Extract the atom type name from the comment section (after the `#`)
+                atom_type_id = int(parts[0])  
+                mass = float(parts[1])  
+               
                 if '#' in line:
                     atom_type_name = line.split('#')[-1].strip()
                     lines[i]= ''
                 else:
-                    atom_type_name = f'Unknown_{atom_type_id}'  # Fallback in case there's no comment
+                    atom_type_name = f'Unknown_{atom_type_id}'  
                 atom_types[atom_type_id] = (atom_type_name, mass)
             except ValueError:
-                continue  # Skip lines that cannot be converted properly
+                continue  
 
     if first_multiple == None:    
         var['2D']['elem2D'] = atom_types
@@ -357,11 +357,11 @@ def sheet(var):
 
     var['dim'] = get_model_dimensions(filename)
     center('2D',filename,var)
-    var['2D']['lat_c'] = stacking(var,2)
+    var['2D']['lat_c'] = stacking(var,2,'AA')
 
     return var
 
-def stacking(var,layer):
+def stacking(var,layer,sheetvsheet=False):
     
     settings_sheet(var,f"{var['dir']}/system_build/sheet_{layer}.in.settings",layer) # generate file for potentials
 
@@ -384,11 +384,21 @@ def stacking(var,layer):
     else:
         x_shift = 0
 
-    for l in range(1,layer):
+    if sheetvsheet:
+        for l in range(4):
+            lmp.command(f"read_data {filename}_1.lmp add append shift 0 0 {l*6} group layer_{l+1}\n") 
         lmp.commands_list([
-            f"read_data {filename}_1.lmp add append shift 0 0 {l*6} group layer_{l+1}\n",
-            f"displace_atoms layer_{l+1} move {x_shift} 0 0 units box"
-            ]) 
+            f"displace_atoms layer_3 move {x_shift} 0 0 units box\n",
+            f"displace_atoms layer_4 move {x_shift} 0 0 units box\n",
+            ])
+    else:
+        for l in range(1,layer):
+            lmp.commands_list([
+                f"read_data {filename}_1.lmp add append shift 0 0 {l*6} group layer_{l+1}\n",
+                f"displace_atoms layer_{l+1} move {x_shift*l} 0 0 units box\n",
+                ]) 
+
+
 
     for t in range(var['data']['2D']['natype']):
         t+=1
@@ -411,6 +421,7 @@ def stacking(var,layer):
                 f"group 2Dtype delete\n"
                 ])
                 c = count
+
 
     lmp.commands_list([
     f"include         {var['dir']}/system_build/sheet_{layer}.in.settings\n\n",

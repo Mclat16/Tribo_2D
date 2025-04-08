@@ -43,7 +43,11 @@ def settings_sheet(var,filename,layer):
         for m in var['data']['2D']['elem_comp']: 
                 mass=data.atomic_masses[data.atomic_numbers[m]] 
                 f.write(f"mass {elemgroup[0][m][0]}*{elemgroup[layer-1][m][-1]} {mass} #{m}\n")
-
+        
+        for l in range(layer):
+            layer_g = [group_def[i][1] for i in range(1,var['data']['2D']['natype']*layer+1) if "2D_l"+str(l+1) in group_def[i][0]]
+            f.write(f"group layer_{l+1} type {' '.join(layer_g)}\n")
+        
         f.write(f"pair_style hybrid {(var['2D']['pot_type']+' ') * layer} lj/cut 8.0\n")
 
         for l in range(layer):
@@ -111,7 +115,6 @@ def settings_afm(var,layer):
                             g+=1
 
                 else:
-                    # print('i:',i,'gr:',gr,'count:',count)
                     for t in range(1,count+1):
                         n = i + t
                         m = element
@@ -139,6 +142,10 @@ def settings_afm(var,layer):
                 for n in ["_fix", "_thermo"]:
                     sub_group = [group_def[i][1] for i in range(1,var['ngroups'][layer]+1) if gr+n in group_def[i][0]]
                     f.write(f"group {gr}{n} type {' '.join(sub_group)}\n")
+            if gr == '2D':
+                for l in range(layer):
+                    layer_g = [group_def[i][1] for i in range(1,var['ngroups'][layer]+1) if "2D_l"+str(l+1) in group_def[i][0]]
+                    f.write(f"group layer_{l+1} type {' '.join(layer_g)}\n")
 
         f.writelines(["group mobile union tip_thermo sub_thermo\n",
                 f"pair_style hybrid {var['sub']['pot_type']} {var['tip']['pot_type']} {(var['2D']['pot_type'] + ' ') * layer} lj/cut 8.0\n"])
@@ -159,7 +166,7 @@ def settings_afm(var,layer):
                 potentials[g]=[group_def[i][2] if g in group_def[i][0] else "NULL"
                                 for i in range(1,var['ngroups'][layer]+1)]
                 f.write(f"pair_coeff * * {var[g]['pot_type']} {t} {var[g]['pot_path']} {'  '.join(potentials[g])} # interlayer {g.capitalize()}\n")
-
+        dist = 0
         for t in var['data']['2D']['elem_comp']:    
             for key in ('sub','tip'):
                 for s in var['data'][key]['elem_comp']:

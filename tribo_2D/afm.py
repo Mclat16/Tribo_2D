@@ -3,17 +3,11 @@ from .build import *
 from .pot import *
 from .settings.file import *
 from .Potentials import *
-from .materials.Build2D import *
-from mp_api.client import MPRester
-import subprocess
-import os
-import json
-from mpi4py import MPI
-from lammps import lammps
+
+
 import numpy as np
-from ase import io, data
 from pathlib import Path
-from CifFile import ReadCif
+
 
 class afm:
     def __init__(self,input):
@@ -21,7 +15,8 @@ class afm:
         # Generate data and variables
 
         var = read_config(input) # Read input file settings
-
+        
+        
         self.group = ['2D' ,'sub', 'tip']
 
         var['data'] = {mat: cifread(var[mat]['cif_path']) for mat in self.group}  # Read materials  
@@ -88,7 +83,7 @@ class afm:
         for layer in self.var['2D']['layers']:
 
             [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['2D']['lat_c']*(layer-1)/2]# Tip placement
-            h_2D        = 14.5
+            h_2D        = 10 + 4.5
 
             filename = f"{self.directory[layer]}/lammps/system.lmp"
             with open(f"{self.scripts}/list_system", 'a') as f:
@@ -202,7 +197,6 @@ class afm:
                 with open(filename, 'w') as f:
                     init(f)
                     f.writelines([
-                    # f"include {self.directory[layer]}/lammps/in.init\n\n",
                     f"read_data       {self.directory[layer]}/data/load_{self.var['general']['find']}N.data # Read system data\n\n",
                     f"include         {self.directory[layer]}/lammps/system.in.settings\n\n",
                     "#----------------- Create visualisation files  ------------\n\n",
@@ -238,7 +232,7 @@ class afm:
                     f"variable f equal {self.var['general']['find']}\n",
                     "variable fincr equal (${find}-${f})/${num_floads}\n",
                     "thermo_style    custom step temp v_f pe ke etotal press\n",
-                    # "thermo_modify   lost ignore flush yes\n\n",
+                    "thermo_modify   lost ignore flush yes\n\n",
                     "run 0\n\n",
                     "#----------------- Apply pressure to the tip   -------------\n\n",
                     "variable i loop ${num_floads}\n",
@@ -307,12 +301,11 @@ class afm:
                     with open(filename, 'w') as f:
                         init(f)
                         f.writelines([
-                        # f"include {self.directory[layer]}/lammps/in.init\n\n",
                         f"read_data       {self.directory[layer]}/data/load_{force}N.data # Read system data\n\n",
                         f"include         {self.directory[layer]}/lammps/system.in.settings\n\n",
                         "#----------------- Create visualisation files ------------\n\n",
                         ])
-                        #CHANGE THIS
+
                         if dump == True:
                             f.write(f"dump            sys all atom 100 ./{self.var['dir']}/visuals/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n")
                         
@@ -392,10 +385,7 @@ class afm:
 
                     "# $PBS_O_WORKDIR is the directory where the pbs script was sent from. Copy everything from the work directory to the temporary directory to prepare for the run\n\n",
 
-                    f"mpiexec lmp -l {self.var['2D']['mat']}/${PBS_log}.log -in $(sed -n {PBS} {self.var['dir']}/scripts/list_{type})\n\n",
-
-                    # "#After the end of the run copy everything back to the parent directory\n",
-                    # f"cp -r ./{self.var['dir']}/ $PBS_O_WORKDIR/{self.var['dir']}\n\n"
+                    f"mpiexec lmp -l $PBS_O_WORKDIR/logs_{self.var['2D']['mat']}/${PBS_log}.log -in $(sed -n {PBS} {self.var['dir']}/scripts/list_{type})\n\n",
                 ])
 
         filename = f"{self.scripts}/{self.var['2D']['mat']}_transfer.pbs"
@@ -442,24 +432,24 @@ class afm:
                 f"qsub {self.scripts}/{self.var['2D']['mat']}_transfer.pbs\n\n",
 
                 "# Once this is done, you can run the system intialisation as follows:\n",
-                f"qsub -W depend=afterok:<XXXX.pbs> {self.scripts}/{self.var['2D']['mat']}_system.pbs\n\n",
+                f"qsub -W depend=afterok:XXXX.pbs {self.scripts}/{self.var['2D']['mat']}_system.pbs\n\n",
 
-                "# Where <XXXX.pbs> is the job number given to you after submitting transfer.pbs\n\n",
+                "# Where XXXX.pbs is the job number given to you after submitting transfer.pbs\n\n",
                 
                 "# Then we can run the loading as follows:\n",
-                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}/{self.var['2D']['mat']}_load.pbs\n\n",
+                f"qsub -W depend=afterany:XXXX[].pbs {self.scripts}/{self.var['2D']['mat']}_load.pbs\n\n",
                 
-                "# Where <XXXX[].pbs> is the job number given to you after submitting system.pbs\n\n",
+                "# Where XXXX[].pbs is the job number given to you after submitting system.pbs\n\n",
                 
                 "# Finally, we can run the sliding as follows:\n",
-                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}/{self.var['2D']['mat']}_slide.pbs\n\n",
+                f"qsub -W depend=afterany:XXXX[].pbs {self.scripts}/{self.var['2D']['mat']}_slide.pbs\n\n",
 
-                "# Where <XXXX[].pbs> is the job number given to you after submitting load.pbs\n\n",
+                "# Where XXXX[].pbs is the job number given to you after submitting load.pbs\n\n",
                 
                 "# Transfer your results back to the home directory with:\n",
-                f"qsub -W depend=afterany:<XXXX[].pbs> {self.scripts}/{self.var['2D']['mat']}_transfer2.pbs\n\n",
+                f"qsub -W depend=afterany:XXXX[].pbs {self.scripts}/{self.var['2D']['mat']}_transfer2.pbs\n\n",
 
-                "# Where <XXXX[].pbs> is the job number given to you after submitting slide.pbs\n\n",
+                "# Where XXXX[].pbs is the job number given to you after submitting slide.pbs\n\n",
 
                 "# Make sure to transfer your results and visuals back to your personal computer\n"
             ])

@@ -48,6 +48,8 @@ variable r equal 0.0
 variable f equal 5
 variable fincr equal (${find}-${f})/${num_floads}
 thermo_style    custom step temp v_f pe ke etotal press
+thermo_modify   lost ignore flush yes
+
 run 0
 
 #----------------- Apply pressure to the tip   -------------

@@ -48,7 +48,7 @@ def cifread(cif):
     
     elements = []
     cif = {}
-    reading_elements = False  # Flag to start reading elements
+    reading_elements = False  
     header_skipped =  False
     keys = {
         '_cell_length_a': 'lat_a',
@@ -65,27 +65,27 @@ def cifread(cif):
             if line.startswith(key):
                 value = line.split(maxsplit=1)[1].strip()
                 cif[var] = float(value) if 'formula' not in var else value
-        # Detect when element section starts
+       
         if line.strip().startswith('_atom_site_type_symbol'):
-            reading_elements = True  # Start reading element symbols
+            reading_elements = True  
             continue
-            # If reading elements, first skip headers
+        
         elif reading_elements == True and not header_skipped== True:
-            if line.strip().startswith('_'):  # These are column headers
-                continue  # Skip header lines
-            header_skipped = True  # Once we hit real data, stop skipping
-        # Read element names
+            if line.strip().startswith('_'):  
+                continue  
+            header_skipped = True  
+    
         if reading_elements and header_skipped:
             parts = line.strip().split()
             if parts:  
-                element = parts[0]  # First column is the element name
+                element = parts[0]  
                 elements.append(element)
                 
     elem_count = {}
     if cif.get('formula'):
-        matches = re.findall(r'([A-Z][a-z]*)(\d*)', cif['formula'])  # Match elements and their count
+        matches = re.findall(r'([A-Z][a-z]*)(\d*)', cif['formula'])  
         for element, count in matches:
-            elem_count[element] = int(count) if count else 1  # Default count to 1 if missing
+            elem_count[element] = int(count) if count else 1  
         nelements = len(elements)
 
         cif.update({
@@ -101,34 +101,33 @@ def count_elemtypes(file):
 
     elem_type = {}
 
-    matches = re.compile(r'([A-Za-z]+)(\d*)')  # Matches "Al1", "O2", or just "Al", "O"
+    matches = re.compile(r'([A-Za-z]+)(\d*)')  
 
-    # Open the potential file
+
     with open(file, 'r') as f:
         lines = f.readlines()
 
     for line in lines:
         stripped_line = line.strip()
 
-        # Skip comments and empty lines
+
         if stripped_line.startswith('#') or not stripped_line:
             continue
         
-        # Split the line into components (by spaces or commas)
+
         parts = stripped_line.split()
 
-        # We want to count the first three elements (which are atomic species)
         if len(parts) >= 3:
-            for element in parts[:3]:  # Check first three items in the line
+            for element in parts[:3]:
                 match = matches.match(element)
                 if match:
-                    element_name = match.group(1)  # Extract the element (e.g., "Al", "O")
-                    element_number = match.group(2)  # Extract the number if it exists
+                    element_name = match.group(1)  
+                    element_number = match.group(2)
 
-                    if element_number:  # If there's a number (e.g., "Al2")
+                    if element_number: 
                         element_number = int(element_number)
                                                 
-                    else:  # If there's no number (e.g., "Al")
+                    else: 
                         element_number = 1  
 
                     if element_name not in elem_type:
@@ -187,7 +186,6 @@ def read_config(input):
     for section in config.sections():
         var[section] = {}
         for key in config[section]:
-            # Assign variable
             value = config.get(section,key)
 
             if value.endswith(']'):
@@ -201,3 +199,43 @@ def read_config(input):
             else:
                 var[section][key] = value
     return var
+
+def atomic2molecular(file):
+    with open(file, 'r') as f:
+        lines = f.readlines()
+
+    atoms_section = False  # Track when we are inside the "Atoms" section
+    modified_lines = []
+
+    for line in lines:
+        line = line.strip()
+        # If we hit the Velocities section, stop processing further lines.
+        if line.startswith("Velocities"):
+            break
+        # Replace "Atoms # atomic" with "Atoms # molecular"
+        if line == "Atoms # atomic":
+            modified_lines.append("Atoms # molecular")
+            atoms_section = True  # Start processing atom lines
+            continue
+        
+        # Modify atom data lines
+        if atoms_section and line:
+            parts = line.split()
+            if len(parts) >= 4:  # Ensure we have at least ID, type, and coordinates
+                atom_id = parts[0]
+                atom_type = parts[1]
+                x, y, z = parts[2:5]
+                
+                # Insert a zero between atom ID and atom type, and add three zeros at the end
+                new_line = f"{atom_id} 0 {atom_type} {x} {y} {z} 0 0 0"
+                modified_lines.append(new_line)
+                continue
+
+        # Add unmodified lines to the list
+        modified_lines.append(line)
+
+    # Overwrite the original file with the modified content
+    with open(file, 'w') as f:
+        f.write("\n".join(modified_lines) + "\n")
+
+

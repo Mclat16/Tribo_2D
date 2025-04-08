@@ -9,6 +9,7 @@ group tip_all type 4 5 6
 group tip_fix type 5
 group tip_thermo type 6
 group 2D_all type 7 8 9 10 11 12 13 14 15 16 17 18
+group layer_1 type 7 8 9 10 11 12 13 14 15 16 17 18
 group mobile union tip_thermo sub_thermo
 pair_style hybrid sw sw sw  lj/cut 8.0
 pair_coeff * * sw 1 ./tribo_2D/Potentials/Si.sw Si  Si  Si  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL # interlayer Sub
