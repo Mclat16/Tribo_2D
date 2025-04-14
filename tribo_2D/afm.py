@@ -30,7 +30,7 @@ class afm:
                     'natype':sum(var['pot'][mat].values())*3
                 })
         # Build one layer of 2D material to generate important variables
-        var['dir'] = f"scripts/{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}/tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
+        var['dir'] = f"scripts/afm/{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}/tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
 
 
         # Create file locations

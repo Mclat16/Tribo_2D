@@ -1,4 +1,0 @@
-mass 1*4 95.95 #Mo
-mass 5*12 32.06 #S
-pair_style hybrid sw  lj/cut 8.0
-pair_coeff * * sw 1 ./tribo_2D/Potentials/sw_lammps/h-mos2/h-mos2.sw Mo1  Mo2  Mo3  Mo4  S1  S2  S3  S4  S5  S6  S7  S8 # interlayer '2D' Layer 1
