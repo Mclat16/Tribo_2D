@@ -17,7 +17,7 @@ def tip_build(var):
 
     x = 2*var['tip']['r']
     y = x
-    z = round(var['tip']['r']/3)
+    z = round(var['tip']['r']/2)
     side = round(2*var['tip']['r']/2.5)
     
     if var['tip']['amorph'] == 'a':
@@ -43,7 +43,7 @@ def tip_build(var):
         "boundary p p p\n",
         "units metal\n",
         "atom_style      atomic\n",
-        f"region box block -{var['tip']['r']} {var['tip']['r']} -{var['tip']['r']} {var['tip']['r']} -3 {z}\n",
+        f"region box block -{var['tip']['r']} {var['tip']['r']} -{var['tip']['r']} {var['tip']['r']} 0 {z}\n",
         f"create_box      {var['data']['tip']['natype']} box\n",
         f"read_data       {filename} add append shift -{var['tip']['r']} -{var['tip']['r']} -10\n",
         f"include {settings}\n",
@@ -120,7 +120,7 @@ def sub_build(var):
         "boundary p p p\n",
         "units metal\n",
         "atom_style      atomic\n",
-        f"region box block {var['dim']['xlo']} {var['dim']['xhi']} {var['dim']['ylo']} {var['dim']['yhi']} -50 50\n",
+        f"region box block {var['dim']['xlo']} {var['dim']['xhi']} {var['dim']['ylo']} {var['dim']['yhi']} 0 10\n",
         f"create_box       {var['data']['sub']['natype']} box\n\n",
         f"read_data {filename} add append\n",
         f"include {settings}\n",
@@ -172,7 +172,7 @@ def amorph(system,filename,am_filename, tempmelt,var):
     
     quench = (tempmelt-var['general']['temproom'])*100
     # lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
-    settings = f"{var['dir']}/system_build/sub.in.settings"
+    settings = f"{var['dir']}/system_build/{system}.in.settings"
     settings_ob(var,settings,system)
     lmp = lammps()
     lmp.commands_list([
@@ -279,7 +279,7 @@ def sheet(var):
         
         if masses_section:
             if 'Atoms' in line:
-                 
+
                 break
             
             parts = line.split()
@@ -289,7 +289,7 @@ def sheet(var):
             try:
                 atom_type_id = int(parts[0])  
                 mass = float(parts[1])  
-               
+
                 if '#' in line:
                     atom_type_name = line.split('#')[-1].strip()
                     lines[i]= ''
@@ -357,11 +357,11 @@ def sheet(var):
 
     var['dim'] = get_model_dimensions(filename)
     center('2D',filename,var)
-    var['2D']['lat_c'] = stacking(var,2,'AA')
+    var['2D']['lat_c'] = stacking(var,2)
 
     return var
 
-def stacking(var,layer,sheetvsheet=False):
+def stacking(var,layer=2,sheetvsheet=False):
     
     settings_sheet(var,f"{var['dir']}/system_build/sheet_{layer}.in.settings",layer) # generate file for potentials
 
@@ -379,14 +379,19 @@ def stacking(var,layer,sheetvsheet=False):
     f"create_box       {var['data']['2D']['natype']*layer} box\n\n",
     f"read_data       {filename}_1.lmp add append group layer_1",
     ])
+    
     if var['2D']['stack_type'] == 'AB':
         x_shift = var['dim']['xhi']/4
     else:
         x_shift = 0
+    if 'lat_c' not in var['2D']:
+        lat_c = 6
+    else:
+        lat_c = var['2D']['lat_c']
 
     if sheetvsheet:
-        for l in range(4):
-            lmp.command(f"read_data {filename}_1.lmp add append shift 0 0 {l*6} group layer_{l+1}\n") 
+        for l in range(1,4):
+            lmp.command(f"read_data {filename}_1.lmp add append shift 0 0 {l*lat_c} group layer_{l+1}\n") 
         lmp.commands_list([
             f"displace_atoms layer_3 move {x_shift} 0 0 units box\n",
             f"displace_atoms layer_4 move {x_shift} 0 0 units box\n",
@@ -394,11 +399,9 @@ def stacking(var,layer,sheetvsheet=False):
     else:
         for l in range(1,layer):
             lmp.commands_list([
-                f"read_data {filename}_1.lmp add append shift 0 0 {l*6} group layer_{l+1}\n",
+                f"read_data {filename}_1.lmp add append shift 0 0 {l*lat_c} group layer_{l+1}\n",
                 f"displace_atoms layer_{l+1} move {x_shift*l} 0 0 units box\n",
                 ]) 
-
-
 
     for t in range(var['data']['2D']['natype']):
         t+=1

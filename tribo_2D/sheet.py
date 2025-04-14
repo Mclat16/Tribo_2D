@@ -31,17 +31,17 @@ class sheetvsheet:
             pass
 
         self.var = sheet(var)
-        _ = stacking(self.var,4,True)
+        self.lat_c= stacking(self.var,4,True)
 
         self.file = f"{var['dir']}/system_build/{self.var['2D']['mat']}_4.lmp"
         atomic2molecular(self.file)
         self.var['ngroups'] = self.var['data']['2D']['natype']*4
 
-    def system(self):
+    def sheet_system(self):
         
         settings_filename = f"{self.var['dir']}/lammps/system.in.settings"
-        settings_sheet(self.var,settings_filename,4) 
-
+        settings_sheet(self.var,settings_filename,4,True) 
+        print(self.lat_c)
         for force in self.var['general']['force']:
             if force == self.var['general']['scan_angle'][3]:
                 scan_angle = np.arange(self.var['general']['scan_angle'][0],self.var['general']['scan_angle'][1]+1,self.var['general']['scan_angle'][2])
@@ -62,71 +62,65 @@ class sheetvsheet:
                         f"region          box block {self.var['dim']['xlo']} {self.var['dim']['xhi']} {self.var['dim']['ylo']} {self.var['dim']['yhi']} -40.0 40.0 units box\n",
                         f"create_box      {self.var['ngroups']} box bond/types 1 extra/bond/per/atom 100\n\n",
 
-                        f"read_data       {self.file} add append group bot\n\n",
+                        f"read_data       {self.file} extra/bond/per/atom 100 add append group bot\n\n",
 
-                    "#----------------- Create visualisation files ------------\n\n "
+                    "#----------------- Create visualisation files ------------\n\n"
                     ])
 
                     # if dump == True:
                     f.write(f"dump            sys all atom 100 ./{self.var['dir']}/visuals/load_{force}N_{a}angle_{self.var['general']['scan_s']}ms.lammpstrj\n\n",)
-                    
                     f.writelines([
                         f"include {settings_filename}\n",
 
                         "# Create bonds\n",
                         "bond_style harmonic\n",
-                        f"bond_coeff 1 {self.var['general']['cspring']} {self.var['2D']['lat_c']} \n",
-                        f"create_bonds many layer_1 layer_2 1 {self.var['2D']['lat_c']-0.25} {self.var['2D']['lat_c']+0.25}\n",
-                        f"create_bonds many layer_3 layer_4 1 {self.var['2D']['lat_c']-0.25} {self.var['2D']['lat_c']+0.25}\n\n ",
-                        "##########################################################\n",
-                        "#-------------------Energy Minimization------------------#\n",
-                        "##########################################################\n\n ",
-
-                        "min_style       cg\n",
-                        "minimize        1.0e-4 1.0e-8 100000 100000\n\n ",
+                        f"bond_coeff 1 {self.var['general']['cspring']} {self.lat_c} \n",
+                        f"create_bonds many layer_1 layer_2 1 {self.lat_c-0.15} {self.lat_c+0.15}\n",
+                        f"create_bonds many layer_3 layer_4 1 {self.lat_c-0.15} {self.lat_c+0.15}\n\n",
 
                         "##########################################################\n",
                         "#------------------- Apply Constraints ------------------#\n",
-                        "##########################################################\n\n ",
+                        "##########################################################\n\n",
 
 
                         "#----------------- Apply Langevin thermostat -------------\n",
-                        "group center union layer_2 layer_3\n ",
+                        "group center union layer_2 layer_3\n",
                         f"velocity        center create {self.var['general']['temproom']} 492847948\n",
-                        f"fix             lang center langevin {self.var['general']['temproom']} {self.var['general']['temproom']} $(100.0*dt) 2847563 zero yes\n\n ",
+                        f"fix             lang center langevin {self.var['general']['temproom']} {self.var['general']['temproom']} $(100.0*dt) 2847563 zero yes\n\n",
 
-                        "fix             nve_all all nve\n\n ",
+                        "fix             nve_all all nve\n\n",
 
                         "timestep        0.001\n",
-                        "thermo          100\n\n ",
+                        "thermo          100\n\n",
 
                         "compute COM_top layer_4 com\n",
                         "variable comx_top equal c_COM_top[1] \n",
                         "variable comy_top equal c_COM_top[2] \n",
-                        "variable comz_top equal c_COM_top[3] \n\n ",
+                        "variable comz_top equal c_COM_top[3] \n\n",
 
                         "compute COM_ctop layer_3 com\n",
                         "variable comx_ctop equal c_COM_ctop[1] \n",
                         "variable comy_ctop equal c_COM_ctop[2] \n",
-                        "variable comz_ctop equal c_COM_ctop[3] \n\n ",
+                        "variable comz_ctop equal c_COM_ctop[3] \n\n",
 
                         "compute COM_cbot layer_2 com\n",
                         "variable comx_cbot equal c_COM_cbot[1] \n",
                         "variable comy_cbot equal c_COM_cbot[2] \n",
-                        "variable comz_cbot equal c_COM_cbot[3] \n\n ",
+                        "variable comz_cbot equal c_COM_cbot[3] \n\n",
 
                         "fix             fstage_top layer_4 rigid single force * on on off torque * off off off\n",
-                        "fix             fsbot layer_1 setforce 0.0 0.0 0.0 \n ",
-                        "velocity        layer_1 set 0.0 0.0 0.0 units box\n\n  ",
-                        "run 1000\n\n ",
+                        "fix             fsbot layer_1 setforce 0.0 0.0 0.0 \n",
+                        "velocity        layer_1 set 0.0 0.0 0.0 units box\n\n",
+                        
+                        "run 1000\n\n",
                         ])
                     
                     if a != 0:
                         f.writelines([
                             f"variable omega equal {a}/10000\n",
-                            "fix rot layer_4 move rotate ${comx_top} ${comy_top} ${comz_top} 0 0 1 ${omega}\n\n ",
+                            "fix rot layer_4 move rotate ${comx_top} ${comy_top} ${comz_top} 0 0 1 ${omega}\n\n",
 
-                            "run             10000\n\n ",
+                            "run             10000\n\n",
                             "unfix rot\n\n",
                         ])
 
@@ -140,10 +134,10 @@ class sheetvsheet:
                         f"variable Fatom equal -{force}/(count(layer_4)*1.602176565)\n",
                         "fix force layer_4 aveforce 0.0 0.0 ${Fatom}\n\n",
 
-                        "run             10000\n\n ",
-                        
-                        "variable        fx   equal  fstage_top[1]*1.602176565\n",
-                        "variable        fy   equal  fstage_top[2]*1.602176565\n",
+                        "run             10000\n\n",
+
+                        "variable        fx   equal  f_force[1]*1.602176565\n",
+                        "variable        fy   equal  f_force[2]*1.602176565\n",
                         "variable        fz   equal  f_force[3]*1.602176565\n\n",
 
 
@@ -151,17 +145,17 @@ class sheetvsheet:
                         "#----------------- Output values -------------------------\n",
                         f"fix             fc_ave all ave/time 1 1000 1000 v_fx v_fy v_fz v_comx_ctop v_comy_ctop v_comz_ctop v_comx_cbot v_comy_cbot v_comz_cbot file {self.var['dir']}/data/{force}nN_{a}angle_{self.var['general']['scan_s']}ms\n\n",
 
-                        f"velocity        stage_top set {self.var['general']['scan_s']} 0.0 0.0 ",
-                        "run             100000\n\n ",
+                        f"velocity        layer_4 set 0.0{self.var['general']['scan_s']} 0.0 0.0 \n",
+                        "run             100000\n\n",
 
                         "##########################################################\n",
                         "#-----------------------Write Data-----------------------#\n",
-                        "##########################################################\n\n ",
+                        "##########################################################\n\n",
 
                         "#----------------- Save final configuration in data file -\n",
                         f"write_data     {self.var['dir']}/data/{force}nN_{a}angle_{self.var['general']['scan_s']}ms.data\n"
                     ])
-    def pbs(self):
+    def sheet_pbs(self):
 
         filename = f"{self.var['dir']}/scripts/sheetvsheet.pbs"
         PBS = '"${PBS_ARRAY_INDEX}p"'
@@ -188,7 +182,7 @@ class sheetvsheet:
 
                 "# $PBS_O_WORKDIR is the directory where the pbs script was sent from. Copy everything from the work directory to the temporary directory to prepare for the run\n\n",
 
-                f"mpiexec lmp -l $PBS_O_WORKDIR/logs_{self.var['2D']['mat']}/${PBS_log}.log -in $(sed -n {PBS} {self.var['dir']}/scripts/sheetvsheet)\n\n",
+                f"mpiexec lmp -l none -in $(sed -n {PBS} {self.var['dir']}/scripts/sheetvsheet)\n\n",
             ])
 
         filename = f"{self.scripts}/{self.var['2D']['mat']}_transfer.pbs"
@@ -206,7 +200,7 @@ class sheetvsheet:
                 f"mkdir -p {self.var['dir']}/\n\n",
 
                 f"cp -r $PBS_O_WORKDIR/{self.var['dir']}/* {self.var['dir']}\n",
-                "cp -r $PBS_O_WORKDIR/tribo_2DPotentials/ .\n"
+                "cp -r $PBS_O_WORKDIR/tribo_2D/Potentials/ .\n"
             ])
 
         filename = f"{self.scripts}/{self.var['2D']['mat']}_transfer2.pbs"

@@ -2,7 +2,7 @@ from ase import data
 from .tools import *
 
 
-def settings_sheet(var,filename,layer):
+def settings_sheet(var,filename,layer,sheetvsheet=False):
     """Writes the LAMMPS input file content to the specified filename.
     Args:
     filename (str): The name of the file to write to.
@@ -48,7 +48,7 @@ def settings_sheet(var,filename,layer):
             layer_g = [group_def[i][1] for i in range(1,var['data']['2D']['natype']*layer+1) if "2D_l"+str(l+1) in group_def[i][0]]
             f.write(f"group layer_{l+1} type {' '.join(layer_g)}\n")
         
-        f.write(f"pair_style hybrid {(var['2D']['pot_type']+' ') * layer} lj/cut 8.0\n")
+        f.write(f"pair_style hybrid {(var['2D']['pot_type']+' ') * layer} lj/cut 11.0\n")
 
         for l in range(layer):
             potentials[l] = [
@@ -57,21 +57,49 @@ def settings_sheet(var,filename,layer):
             ]            
             f.write(f"pair_coeff * * {var['2D']['pot_type']} {l+1} {var['2D']['pot_path']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
         
-        if var['2D']['pot_type'] == 'sw':
+        if sheetvsheet:
             for t in var['data']['2D']['elem_comp']:
                 for s in var['data']['2D']['elem_comp']:
                     e,sigma = LJparams(s,t)
-                    for l in range(layer-1):
+                    for l in range(3):
                         t1 = f"{elemgroup[l][t][0]}*{elemgroup[l][t][-1]}"
-                        t2 = f"{elemgroup[l+1][s][0]}*{elemgroup[layer-1][s][-1]}"
+                        t2 = f"{elemgroup[l+1][s][0]}*{elemgroup[l+1][s][-1]}"
                         if elemgroup[l][t][0] == elemgroup[l][t][-1]:
                             t1 = f"{elemgroup[l][t][0]}"
-                        if elemgroup[l+1][s][0] == elemgroup[layer-1][s][-1]:
+                        if elemgroup[l+1][s][0] == elemgroup[l+1][s][-1]:
                             t2 = f"{elemgroup[l+1][s][0]}"
                         if elemgroup[l][t][0]>elemgroup[l+1][s][0]:
                             t1, t2 = t2, t1
                         f.write(f"pair_coeff {t1} {t2} lj/cut {e} {sigma} \n")
+                    
+                    index_pairs = [(1, 3), (0, 3), (0, 2)]
+                    for i,j in index_pairs:
+                        t1 = f"{elemgroup[i][t][0]}*{elemgroup[i][t][-1]}"
+                        t2 = f"{elemgroup[j][s][0]}*{elemgroup[j][s][-1]}"
+                        if elemgroup[i][t][0] == elemgroup[i][t][-1]:
+                            t1 = f"{elemgroup[l][t][0]}"
+                        if elemgroup[j][s][0] == elemgroup[j][s][-1]:
+                            t2 = f"{elemgroup[l+1][s][0]}"
+                        if elemgroup[i][t][0]>elemgroup[j][s][0]:
+                            t1, t2 = t2, t1
+                        f.write(f"pair_coeff {t1} {t2} lj/cut 1e-100 {sigma} \n")
 
+        else:
+            if var['2D']['pot_type'] == 'sw':
+                for t in var['data']['2D']['elem_comp']:
+                    for s in var['data']['2D']['elem_comp']:
+                        e,sigma = LJparams(s,t)
+                        for l in range(layer-1):
+                            t1 = f"{elemgroup[l][t][0]}*{elemgroup[l][t][-1]}"
+                            t2 = f"{elemgroup[l+1][s][0]}*{elemgroup[layer-1][s][-1]}"
+                            if elemgroup[l][t][0] == elemgroup[l][t][-1]:
+                                t1 = f"{elemgroup[l][t][0]}"
+                            if elemgroup[l+1][s][0] == elemgroup[layer-1][s][-1]:
+                                t2 = f"{elemgroup[l+1][s][0]}"
+                            if elemgroup[l][t][0]>elemgroup[l+1][s][0]:
+                                t1, t2 = t2, t1
+                            f.write(f"pair_coeff {t1} {t2} lj/cut {e} {sigma} \n")
+        
 def settings_afm(var,layer):
 
     """Writes the LAMMPS input file content to the specified filename.

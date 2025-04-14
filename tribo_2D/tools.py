@@ -1,43 +1,10 @@
 from .settings import *
-from mp_api.client import MPRester
 import os
 import json
 from .Potentials.lj_params import lj_params
 import numpy as np
 import configparser
 import re
-
-def matsearch(material_id):
-    material_id = str(material_id)
-    with MPRester("ASGI0EvO83K5vj5GFmdJCYOpd7qgVTAL") as mpr:
-        data = mpr.materials.summary.search(material_ids=[material_id], fields=["structure", "formula_pretty","composition_reduced"])
-        formula = data[0].formula_pretty
-        comp = {str(element): int(count) for element, count in data[0].composition_reduced.items()}
-        elements = []
-        for element, count in comp.items():
-            elements.extend([element] * count)
-        nelements = len(elements)
-        structure = data[0].structure
-        filename = formula + ".cif"
-        structure.to(filename)
-
-    cif={}
-
-    cif= {
-        'lat_a': structure.lattice.a,
-        'lat_b': structure.lattice.b,
-        'lat_c': structure.lattice.c,
-        'formula': formula,
-        'ang_a': structure.lattice.alpha,
-        'ang_b': structure.lattice.beta,
-        'ang_g': structure.lattice.gamma,
-        "elem_comp": comp,
-        "nelements": nelements,
-        "filename": filename,
-        "elements": elements
-    }
-    
-    return cif
     
 def cifread(cif):
 

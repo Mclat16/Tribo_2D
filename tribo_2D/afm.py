@@ -3,8 +3,6 @@ from .build import *
 from .pot import *
 from .settings.file import *
 from .Potentials import *
-
-
 import numpy as np
 from pathlib import Path
 
@@ -111,7 +109,7 @@ class afm:
                 f"dump            sys all atom 100 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
                 "#----------------- Minimize the system -------------------\n\n",
                 "min_style       cg\n",
-                "minimize        1.0e-4 1.0e-8 1000000 1000000\n\n",
+                "minimize        1.0e-4 1.0e-8 100 1000\n\n",
                 "timestep        0.001\n",
                 "thermo          100\n\n",
                 #----------------- Apply Nose-Hoover thermostat ----------
@@ -315,9 +313,10 @@ class afm:
                         "#--------------------Tip Indentation---------------------#\n",
                         "##########################################################\n",
                         "#----------------- Apply constraints ---------------------\n\n",
-                        "#Fix the bottom layer of the base and the edges of the graphene\n\n",
+
                         "fix             sub_fix sub_fix setforce 0.0 0.0 0.0 \n",
-                        "fix             tip_f tip_fix rigid/nve single force * off off on torque * off off off\n\n",
+                        "fix             tip_f tip_fix rigid/nve single force * on on on torque * off off off\n\n",
+
                         "#----------------- Apply Langevin thermostat -------------\n\n",
                         "compute         temp_tip tip_thermo temp/partial 0 1 0\n",
                         f"fix             lang_tip tip_thermo langevin {self.var['general']['temproom']} {self.var['general']['temproom']} $(100.0*dt) 699483 zero yes\n",
@@ -326,33 +325,50 @@ class afm:
                         f"fix             lang_bot sub_thermo langevin {self.var['general']['temproom']} {self.var['general']['temproom']} $(100.0*dt) 2847563 zero yes\n",
                         "fix_modify      lang_bot temp temp_base\n\n",
                         "fix             nve_all all nve\n",
+
                         "timestep        0.001\n",
                         "thermo          100\n\n",
+
                         "#----------------- Apply pressure to the tip -------------\n\n",
                         f"variable        Ftotal          equal -{force}/1.602176565\n",
                         "variable        Fatom           equal v_Ftotal/count(tip_fix)\n",
                         "fix             forcetip tip_fix aveforce 0.0 0.0 ${Fatom}\n\n",
+
                         "##########################################################\n",
                         "#------------------------Compute-------------------------#\n",
                         "##########################################################\n\n",
+			f"compute COM_top layer_{layer} com\n",
+                        "variable comx equal c_COM_top[1] \n",
+                        "variable comy equal c_COM_top[2] \n",
+                        "variable comz equal c_COM_top[3] \n\n",
+
+                        f"compute COM_tip tip_fix com\n",
+                        "variable comx_tip equal c_COM_tip[1] \n",
+                        "variable comy_tip equal c_COM_tip[2] \n",
+                        "variable comz_tip equal c_COM_tip[3] \n\n",
                         "#----------------- Calculate total friction --------------\n\n",
                         "variable        fz_tip   equal  f_forcetip[3]*1.602176565\n\n",
                         "variable        fx_spr   equal  f_spr[1]*1.602176565\n\n",
                         "variable        fy_spr   equal f_spr[2]*1.602176565\n\n",
-                        f"fix             fc_ave all ave/time 1 1000 1000 v_fz_tip v_fx_spr v_fy_spr file ./{self.var['dir']}/results/fc_ave_slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}\n\n",
+                        f"fix             fc_ave all ave/time 1 1000 1000 v_fz_tip v_fx_spr v_fy_spr v_comx v_comy v_comz v_comx_tip v_comy_tip v_comz_tip file ./{self.var['dir']}/results/fc_ave_slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}\n\n",
+                        
                         "##########################################################\n",
                         "#---------------------Spring Loading---------------------#\n",
                         "##########################################################\n\n",
                         "#----------------- Add damping force ---------------------\n\n",
                         f"fix             damp tip_fix viscous {DspringeV}\n\n",
+
                         "#------------------Add lateral harmonic spring------------\n\n",
                         f"fix             spr tip_fix smd cvel {springeV} {tipps} tether {spring_x} {spring_y} NULL 0.0\n\n",
-                        "run 200000\n\n",
+                        "run 80000\n\n",
+
                         "unfix spr\n\n",
                         "variable        fx_spr   equal  0\n",
-                        "run 100000\n\n",
+                        "run 5000\n\n",
+
                         f"fix             spr tip_fix smd cvel  {springeV} {tipps} tether -{spring_x} -{spring_y} NULL 0.0\n\n",
-                        "run 200000\n",
+                        "run 80000\n",
+
                         f"write_data {self.directory[layer]}/data/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms.data"
                         ])
     
@@ -365,7 +381,7 @@ class afm:
             PBS_log = "{PBS_ARRAY_INDEX}"
             with open(f"{self.scripts}/list_{type}", 'r' ) as f:
                 n = len(f.readlines())
-            with open(filename,'w') as f: 
+            with open(filename,'w') as f:
                 f.writelines([
                     "#!/bin/bash\n",
                     "#PBS -l select=1:ncpus=32:mem=62gb:mpiprocs=32:cpu_type=rome\n",
@@ -385,7 +401,7 @@ class afm:
 
                     "# $PBS_O_WORKDIR is the directory where the pbs script was sent from. Copy everything from the work directory to the temporary directory to prepare for the run\n\n",
 
-                    f"mpiexec lmp -l $PBS_O_WORKDIR/logs_{self.var['2D']['mat']}/${PBS_log}.log -in $(sed -n {PBS} {self.var['dir']}/scripts/list_{type})\n\n",
+                    f"mpiexec lmp -l none -in $(sed -n {PBS} {self.var['dir']}/scripts/list_{type})\n\n",
                 ])
 
         filename = f"{self.scripts}/{self.var['2D']['mat']}_transfer.pbs"
@@ -403,7 +419,7 @@ class afm:
                 f"mkdir -p {self.var['dir']}/\n\n",
 
                 f"cp -r $PBS_O_WORKDIR/{self.var['dir']}/* {self.var['dir']}\n",
-                "cp -r $PBS_O_WORKDIR/tribo_2DPotentials/ .\n"
+                "cp -r $PBS_O_WORKDIR/tribo_2D/Potentials/ .\n"
             ])
 
         filename = f"{self.scripts}/{self.var['2D']['mat']}_transfer2.pbs"
