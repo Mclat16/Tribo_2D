@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       SnOSnO
+_chemical_formula_structural       Sn2O2
 _chemical_formula_sum              "Sn2 O2"
 _cell_length_a       5.02475795877119
 _cell_length_b       3.339485483901793

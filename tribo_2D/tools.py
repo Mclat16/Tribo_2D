@@ -5,6 +5,7 @@ from .Potentials.lj_params import lj_params
 import numpy as np
 import configparser
 import re
+import shutil
     
 def cifread(cif):
 
@@ -205,4 +206,14 @@ def atomic2molecular(file):
     with open(file, 'w') as f:
         f.write("\n".join(modified_lines) + "\n")
 
+def copy_file(path1, dest):
+    
+    os.makedirs(dest, exist_ok=True)
 
+    filename = os.path.basename(path1)
+
+    path2 = os.path.join(dest, filename)
+
+    shutil.copy2(path1, path2)
+
+    return path2

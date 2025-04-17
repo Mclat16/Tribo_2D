@@ -30,25 +30,39 @@ class sheetvsheet:
         with open(f"{var['dir']}/scripts/sheetvsheet", 'w'):
             pass
 
+        var['pot']['path'] = {'2D': copy_file(var['2D']['pot_path'],f"{var['dir']}/potentials/")}
+
         self.var = sheet(var)
         self.lat_c= stacking(self.var,4,True)
 
         self.file = f"{var['dir']}/system_build/{self.var['2D']['mat']}_4.lmp"
         atomic2molecular(self.file)
         self.var['ngroups'] = self.var['data']['2D']['natype']*4
+        
+        self.scan_angle = np.arange(self.var['general']['scan_angle'][0],self.var['general']['scan_angle'][1]+1,self.var['general']['scan_angle'][2])
+
+        self.dump_load = [self.var['general']['force'][i] for i in range(4, len(self.var['general']['force']), 10)]
+        self.dump_slide = [self.scan_angle[i] for i in range(4, len(self.scan_angle), 10)]
 
     def sheet_system(self):
-        
+                    
         settings_filename = f"{self.var['dir']}/lammps/system.in.settings"
         settings_sheet(self.var,settings_filename,4,True) 
         print(self.lat_c)
         for force in self.var['general']['force']:
             if force == self.var['general']['scan_angle'][3]:
+                dump = False
                 scan_angle = np.arange(self.var['general']['scan_angle'][0],self.var['general']['scan_angle'][1]+1,self.var['general']['scan_angle'][2])
             else:
+                dump = False
                 scan_angle = [0]
+                if force in self.dump_load:
+                    dump = True
                 
             for a in scan_angle:
+                if a in self.dump_slide:
+                    dump = True
+                
                 filename = f"{self.var['dir']}/lammps/{force}nN_{a}angle_{self.var['general']['scan_s']}ms.lmp"
 
                 with open(f"{self.var['dir']}/scripts/sheetvsheet", 'a') as f:
@@ -67,8 +81,10 @@ class sheetvsheet:
                     "#----------------- Create visualisation files ------------\n\n"
                     ])
 
-                    # if dump == True:
-                    f.write(f"dump            sys all atom 100 ./{self.var['dir']}/visuals/load_{force}N_{a}angle_{self.var['general']['scan_s']}ms.lammpstrj\n\n",)
+                    if dump == True:
+                        f.write(f"dump            sys all atom 5000 ./{self.var['dir']}/visuals/load_{force}N_{a}angle_{self.var['general']['scan_s']}ms.lammpstrj\n\n",)
+                    
+                    
                     f.writelines([
                         f"include {settings_filename}\n",
 

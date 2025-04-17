@@ -25,12 +25,12 @@ def tip_build(var):
         filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['tip']['mat']}.lmp")
 
         if os.path.exists(am_filename):
-            print("File exists")
+            pass
         else:
             slab_generator('tip',var, 200, 200, 50)
             amorph('tip',filename, am_filename, 2500,var)
             os.remove(filename)
-            print("File Removed")
+            
         
         filename = am_filename
         
@@ -101,13 +101,13 @@ def sub_build(var):
         filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['sub']['mat']}.lmp")
 
         if os.path.exists(am_filename):
-            print("File exists")
+            pass
         else:
             slab_generator('sub',var, 200, 200, 20)
             amorph('sub',filename, am_filename,2500,var)
             
             os.remove(filename)
-            print("File Removed")
+            
         
         filename = am_filename
     
@@ -233,25 +233,30 @@ def sheet(var):
 
     for multiple in multiples.values():
         if multiple != first_multiple:  
-            if multiple == None and first_multiple == 1 or multiple == 1 and first_multiple== None:
+            if multiple is None and first_multiple == 1 or multiple == 1 and first_multiple is None:
                 first_multiple=1
             else:
                 raise ValueError('multiples must be the same')
-    
+
     Path(filename).unlink(missing_ok=True)
 
-    if first_multiple == None:
-        atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -duplicate 2 2 1 -ow {filename} -v 0"
+    if first_multiple is None:
+        atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -ow {filename} -v 0"
 
-    elif first_multiple < 1:
+    elif isinstance(first_multiple, float) and not first_multiple.is_integer():
         raise ValueError('potential file or cif file is not formatted properly')
     
     else:
         if first_multiple ==1:
             atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -ow {filename} -v 0"
         else:
-            m = np.sqrt(first_multiple)
-            atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -duplicate {int(m)} {int(m)} 1 {filename} -v 0"
+            for i in range(int(np.sqrt(first_multiple))+1, 0, -1):
+                if first_multiple % i == 0:
+                    a = int(i)
+                    b = int(first_multiple / i)
+                    break
+
+            atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -duplicate {a} {b} 1 -ow {filename} -v 0"
             
     subprocess.run(atomsk_command, shell=True, check=True)
     
@@ -263,9 +268,8 @@ def sheet(var):
     atoms_section = False
     a = 1 
 
-
     atom_types = {}
-    var['2D']['elem2D'] = {}
+    var['2D']['elem'] = {}
     for i, line in enumerate(lines):
         stripped_line = line.strip()
 
@@ -299,8 +303,8 @@ def sheet(var):
             except ValueError:
                 continue  
 
-    if first_multiple == None:    
-        var['2D']['elem2D'] = atom_types
+    if first_multiple  is None:    
+        var['2D']['elem'] = atom_types
     else:    
         modified_lines = set() 
     
@@ -319,10 +323,10 @@ def sheet(var):
                             parts[1] = str(a)  # Update atom type
                             lines[l]= '  '.join(parts) + '\n'
                             modified_lines.add(l)
-                            var['2D']['elem2D'][a] = atom_types[i]
+                            var['2D']['elem'][a] = atom_types[i]
                             a += 1  # Increment for next line
                             continue
-        
+
         masses_section = False
         for i, line in enumerate(lines):
             if line.strip() == 'Masses':
@@ -331,19 +335,18 @@ def sheet(var):
             
             if masses_section:
                 for l in range(1,var['data']['2D']['natype']+1):
-                    lines[i] += f"{l} {var['2D']['elem2D'][l][1]}  #{var['2D']['elem2D'][l][0]}\n"
+                    lines[i] += f"{l} {var['2D']['elem'][l][1]}  #{var['2D']['elem'][l][0]}\n"
                 break
             
         # Save modified file
         with open(filename, 'w') as file:
             file.writelines(lines)
 
-    if first_multiple == 1:
-        atomsk_command = f"echo n | atomsk {filename} -duplicate 2 2 1 -ow lmp -v 0"
-        subprocess.run(atomsk_command, shell=True, check=True)
 
     atomsk_command = f"atomsk {filename} -orthogonal-cell -ow lmp -v 0"
     subprocess.run(atomsk_command, shell=True, check=True)
+
+
 
     dim = get_model_dimensions(filename)
     duplicate_a = round(x / dim['xhi'])
@@ -354,9 +357,11 @@ def sheet(var):
 
     charge2atom = f"lmp_charge2atom.sh {filename}"
     subprocess.run(charge2atom, shell=True, check=True)
-
+        
     var['dim'] = get_model_dimensions(filename)
+
     center('2D',filename,var)
+
     var['2D']['lat_c'] = stacking(var,2)
 
     return var
@@ -466,7 +471,7 @@ def stacking(var,layer=2,sheetvsheet=False):
 def center(system,filename,var):
     
     lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
-    # lmp.file("lammps/in.init")
+
     lmp.commands_list([
     "units           metal\n",
     "atom_style      atomic\n",
@@ -480,6 +485,7 @@ def center(system,filename,var):
     
     elem = []
     i=0
+    
     for element, count in var['pot'][system].items():
         if not count or count == 1:
             elem.append(element)

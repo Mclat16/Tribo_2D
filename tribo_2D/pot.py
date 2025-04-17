@@ -55,7 +55,7 @@ def settings_sheet(var,filename,layer,sheetvsheet=False):
                 group_def[i][3] if group_def[i][4]==l+1 else "NULL"
                 for i in range(1,var['data']['2D']['natype']*layer+1)
             ]            
-            f.write(f"pair_coeff * * {var['2D']['pot_type']} {l+1} {var['2D']['pot_path']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
+            f.write(f"pair_coeff * * {var['2D']['pot_type']} {l+1} {var['pot']['path']['2D']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
         
         if sheetvsheet:
             for t in var['data']['2D']['elem_comp']:
@@ -189,11 +189,11 @@ def settings_afm(var,layer):
                         for i in range(1,var['ngroups'][layer]+1)
                     ]     
 
-                    f.write(f"pair_coeff * * {var['2D']['pot_type']} {t+l} {var['2D']['pot_path']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
+                    f.write(f"pair_coeff * * {var['2D']['pot_type']} {t+l} {var['pot']['path']['2D']} {'  '.join(potentials[l])} # interlayer '2D' Layer {l+1}\n")
             else:
                 potentials[g]=[group_def[i][2] if g in group_def[i][0] else "NULL"
                                 for i in range(1,var['ngroups'][layer]+1)]
-                f.write(f"pair_coeff * * {var[g]['pot_type']} {t} {var[g]['pot_path']} {'  '.join(potentials[g])} # interlayer {g.capitalize()}\n")
+                f.write(f"pair_coeff * * {var[g]['pot_type']} {t} {var['pot']['path'][g]} {'  '.join(potentials[g])} # interlayer {g.capitalize()}\n")
         dist = 0
         for t in var['data']['2D']['elem_comp']:    
             for key in ('sub','tip'):
@@ -258,7 +258,7 @@ def settings_sb(var,filename,system):
                     
         f.writelines([
             f"pair_style {var[system]['pot_type']}\n",
-            f"pair_coeff * * {var[system]['pot_path']} {' '.join((potentials))}\n"])
+            f"pair_coeff * * {var['pot']['path'][system]} {' '.join((potentials))}\n"])
         
 
 def settings_ob(var,filename,system):
@@ -299,5 +299,5 @@ def settings_ob(var,filename,system):
                     
         f.writelines([
             f"pair_style {var[system]['pot_type']}\n",
-            f"pair_coeff * * {var[system]['pot_path']} {' '.join((potentials))}\n"])
+            f"pair_coeff * * {var['pot']['path'][system]} {' '.join((potentials))}\n"])
         

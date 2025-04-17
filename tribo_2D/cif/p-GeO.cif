@@ -1,5 +1,5 @@
 data_image0
-_chemical_formula_structural       GeOGeO
+_chemical_formula_structural       Ge2O2
 _chemical_formula_sum              "Ge2 O2"
 _cell_length_a       4.665697233930941
 _cell_length_b       3.0012743637154973

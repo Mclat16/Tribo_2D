@@ -1,6 +1,6 @@
 data_image0
-_chemical_formula_structural       CS
-_chemical_formula_sum              "C2  S2"
+_chemical_formula_structural       C2S2
+_chemical_formula_sum              "C2 S2"
 _cell_length_a       4.323
 _cell_length_b       2.795
 _cell_length_c       105.0

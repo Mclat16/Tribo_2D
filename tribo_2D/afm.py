@@ -32,7 +32,6 @@ class afm:
         # Build one layer of 2D material to generate important variables
         var['dir'] = f"scripts/afm/{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}/tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
 
-
         # Create file locations
 
         self.scripts = var['dir'] +"/scripts"
@@ -48,7 +47,8 @@ class afm:
             with open(Path(var['dir'], "scripts", f), "w"):
                 pass 
             
-        
+        var['pot']['path'] = {mat: copy_file(var[mat]['pot_path'],f"{var['dir']}/potentials/") for mat in self.group}
+        print(var['pot']['path'])
         self.var = sheet(var)
 
         #Expand to multiple layers if required
@@ -73,6 +73,8 @@ class afm:
         self.dump_slide = [self.scan_angle[i] for i in range(4, len(self.scan_angle), 5)]
         
         # Generate substrate and tip
+        print(type(self.var['general']['force']))
+        print(self.var['general']['force'])
 
         tip_build(self.var)
         sub_build(self.var)
@@ -106,7 +108,7 @@ class afm:
                 "# Apply potentials\n\n",
                 f"include        {self.directory[layer]}/lammps/system.in.settings\n\n",
                 "#----------------- Create visualisation files ------------\n\n",
-                f"dump            sys all atom 100 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
+                f"dump            sys all atom 1000 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
                 "#----------------- Minimize the system -------------------\n\n",
                 "min_style       cg\n",
                 "minimize        1.0e-4 1.0e-8 100 1000\n\n",
@@ -201,7 +203,7 @@ class afm:
                     ])
 
                     if dump == True:
-                        f.write(f"dump            sys all atom 100 ./{self.var['dir']}/visuals/load_{force}N_l{layer}.lammpstrj\n\n",)
+                        f.write(f"dump            sys all atom 1000 ./{self.var['dir']}/visuals/load_{force}N_l{layer}.lammpstrj\n\n",)
 
 
                     f.writelines([
@@ -305,7 +307,7 @@ class afm:
                         ])
 
                         if dump == True:
-                            f.write(f"dump            sys all atom 100 ./{self.var['dir']}/visuals/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n")
+                            f.write(f"dump            sys all atom 1000 ./{self.var['dir']}/visuals/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n")
                         
                         f.writelines([
                         
