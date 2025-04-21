@@ -1,4 +1,4 @@
-from tribo_2D.afm_simplified import *
+from tribo_2D.afm import *
 from tribo_2D.tools import *
 from tribo_2D.sheet import *
 import os
@@ -18,7 +18,7 @@ with open(f"afm_config_temp.ini", "r") as file:
 with open(f"sheet_config_temp.ini", "r") as file:
     template_sheet = file.read()
 
-materials = ["h-MoS2"]
+materials = ["h-CrO2"]
 for m in materials:
     updated_afm = template_afm.replace("{mat}", m)
 

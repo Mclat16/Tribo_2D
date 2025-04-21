@@ -48,7 +48,6 @@ class afm:
                 pass 
             
         var['pot']['path'] = {mat: copy_file(var[mat]['pot_path'],f"{var['dir']}/potentials/") for mat in self.group}
-        print(var['pot']['path'])
         self.var = sheet(var)
 
         #Expand to multiple layers if required
@@ -73,8 +72,6 @@ class afm:
         self.dump_slide = [self.scan_angle[i] for i in range(4, len(self.scan_angle), 5)]
         
         # Generate substrate and tip
-        print(type(self.var['general']['force']))
-        print(self.var['general']['force'])
 
         tip_build(self.var)
         sub_build(self.var)

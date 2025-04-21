@@ -82,7 +82,7 @@ class sheetvsheet:
                     ])
 
                     if dump == True:
-                        f.write(f"dump            sys all atom 5000 ./{self.var['dir']}/visuals/load_{force}N_{a}angle_{self.var['general']['scan_s']}ms.lammpstrj\n\n",)
+                        f.write(f"dump            sys all atom 1000 ./{self.var['dir']}/visuals/load_{force}N_{a}angle_{self.var['general']['scan_s']}ms.lammpstrj\n\n",)
                     
                     
                     f.writelines([

@@ -217,3 +217,77 @@ def copy_file(path1, dest):
     shutil.copy2(path1, path2)
 
     return path2
+
+def num_atoms_lmp(filename):
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+
+    modified_lines = []
+    masses_section = False
+    atoms_section = False
+    a = 1 
+
+    atom_types = {}
+    elem = {}
+    for i, line in enumerate(lines):
+        stripped_line = line.strip()
+
+        if line.strip() == 'Masses':
+            masses_section = True
+            continue  
+        
+        if masses_section:
+            if 'Atoms' in line:
+                break
+            
+            parts = line.split()
+            if len(parts) < 2:
+                atom_type_id = int(parts[0])  
+                mass = float(parts[1])  
+
+                if '#' in line:
+                    atom_type_name = line.split('#')[-1].strip()
+                    lines[i]= ''
+                else:
+                    atom_type_name = f'Unknown_{atom_type_id}'  
+                atom_types[atom_type_id] = (atom_type_name, mass)
+  
+   
+    modified_lines = set() 
+
+    for i in range(1,len(atom_types)+1):
+        atoms_section = False
+        for l, line in enumerate(lines):
+            stripped_line = line.strip()
+            if re.match(r'^\s*\d+\s+atom types\s*$', stripped_line):
+                lines[i]= f"  {len(atom_types)}  atom types\n"
+                continue
+            if 'Atoms' in line:
+                atoms_section = True
+                continue
+            if atoms_section and stripped_line and l not in modified_lines:
+                    parts = stripped_line.split()
+                    if parts[1] == str(i):
+                        parts[1] = str(a)  # Update atom type
+                        lines[l]= '  '.join(parts) + '\n'
+                        modified_lines.add(l)
+                        elem[a] = atom_types[i]
+                        a += 1  # Increment for next line
+                        continue
+
+    masses_section = False
+    for i, line in enumerate(lines):
+        if line.strip() == 'Masses':
+            masses_section = True
+            continue
+        
+        if masses_section:
+            for l in range(1,len(atom_types)+1):
+                lines[i] += f"{l} {elem[l][1]}  #{elem[l][0]}\n"
+            break
+        
+    # Save modified file
+    with open(filename, 'w') as file:
+        file.writelines(lines)
+    
+    return elem
