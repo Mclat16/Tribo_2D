@@ -242,15 +242,16 @@ def num_atoms_lmp(filename):
             
             parts = line.split()
             if len(parts) < 2:
-                atom_type_id = int(parts[0])  
-                mass = float(parts[1])  
+                continue
 
-                if '#' in line:
-                    atom_type_name = line.split('#')[-1].strip()
-                    lines[i]= ''
-                else:
-                    atom_type_name = f'Unknown_{atom_type_id}'  
-                atom_types[atom_type_id] = (atom_type_name, mass)
+            atom_type_id = int(parts[0])  
+            mass = float(parts[1])  
+            if '#' in line:
+                atom_type_name = line.split('#')[-1].strip()
+                lines[i]= ''
+            else:
+                atom_type_name = f'Unknown_{atom_type_id}'  
+            atom_types[atom_type_id] = (atom_type_name, mass)
   
    
     modified_lines = set() 
