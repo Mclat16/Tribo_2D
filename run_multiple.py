@@ -18,7 +18,7 @@ with open(f"afm_config_temp.ini", "r") as file:
 with open(f"sheet_config_temp.ini", "r") as file:
     template_sheet = file.read()
 
-materials = ["h-CrO2"]
+# materials = ["h-CrO2"]
 for m in materials:
     updated_afm = template_afm.replace("{mat}", m)
 

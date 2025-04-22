@@ -1,7 +1,7 @@
 from .tools import *
 from .settings import *
 from .pot import *
-from ase import data
+from ase import io,data
 import subprocess
 import os
 from lammps import lammps
@@ -237,11 +237,18 @@ def sheet(var):
                 first_multiple=1
             else:
                 raise ValueError('multiples must be the same')
+    
+    typecount = 0
+    for atomcount in var['pot']['2D'].values():
+        typecount += atomcount
 
     Path(filename).unlink(missing_ok=True)
 
     if first_multiple is None:
         atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -ow {filename} -v 0"
+        subprocess.run(atomsk_command, shell=True, check=True)
+        atomsk_command = f"atomsk {filename} -orthogonal-cell -ow lmp -v 0"
+        subprocess.run(atomsk_command, shell=True, check=True)
 
     elif isinstance(first_multiple, float) and not first_multiple.is_integer():
         raise ValueError('potential file or cif file is not formatted properly')
@@ -249,104 +256,30 @@ def sheet(var):
     else:
         if first_multiple ==1:
             atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -ow {filename} -v 0"
+            subprocess.run(atomsk_command, shell=True, check=True)
+            num_atoms_lmp(filename)
+            atomsk_command = f"atomsk {filename} -orthogonal-cell -ow lmp -v 0"
+            subprocess.run(atomsk_command, shell=True, check=True)
+            
         else:
-            for i in range(int(np.sqrt(first_multiple))+1, 0, -1):
-                if first_multiple % i == 0:
-                    a = int(i)
-                    b = int(first_multiple / i)
-                    break
+            atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -ow {filename} -v 0"
+            subprocess.run(atomsk_command, shell=True, check=True)
+            num_atoms_lmp(filename)
 
-            atomsk_command = f"echo n | atomsk {var['2D']['cif_path']} -duplicate {a} {b} 1 -ow {filename} -v 0"
-            
-    subprocess.run(atomsk_command, shell=True, check=True)
-    
-    with open(filename, 'r') as file:
-        lines = file.readlines()
-
-    modified_lines = []
-    masses_section = False
-    atoms_section = False
-    a = 1 
-
-    atom_types = {}
-    var['2D']['elem'] = {}
-    for i, line in enumerate(lines):
-        stripped_line = line.strip()
-
-        if re.match(r'^\s*\d+\s+atom types\s*$', stripped_line):
-            lines[i]= f"  {var['data']['2D']['natype']}  atom types\n"
-            continue
-
-        if line.strip() == 'Masses':
-            masses_section = True
-            continue  
-        
-        if masses_section:
-            if 'Atoms' in line:
-
-                break
-            
-            parts = line.split()
-            if len(parts) < 2:
-                continue  
-
-            try:
-                atom_type_id = int(parts[0])  
-                mass = float(parts[1])  
-
-                if '#' in line:
-                    atom_type_name = line.split('#')[-1].strip()
-                    lines[i]= ''
-                else:
-                    atom_type_name = f'Unknown_{atom_type_id}'  
-                atom_types[atom_type_id] = (atom_type_name, mass)
-            except ValueError:
-                continue  
-
-    if first_multiple  is None:    
-        var['2D']['elem'] = atom_types
-    else:    
-        modified_lines = set() 
-    
-        for i in range(1,len(atom_types)+1):
-            atoms_section = False
-            for l, line in enumerate(lines):
-                stripped_line = line.strip()
-                if 'Atoms' in line:
-                    atoms_section = True
-                    continue
-
-                if atoms_section and stripped_line and l not in modified_lines:
-                        parts = stripped_line.split()
-
-                        if parts[1] == str(i):
-                            parts[1] = str(a)  # Update atom type
-                            lines[l]= '  '.join(parts) + '\n'
-                            modified_lines.add(l)
-                            var['2D']['elem'][a] = atom_types[i]
-                            a += 1  # Increment for next line
-                            continue
-
-        masses_section = False
-        for i, line in enumerate(lines):
-            if line.strip() == 'Masses':
-                masses_section = True
-                continue
-            
-            if masses_section:
-                for l in range(1,var['data']['2D']['natype']+1):
-                    lines[i] += f"{l} {var['2D']['elem'][l][1]}  #{var['2D']['elem'][l][0]}\n"
-                break
-            
-        # Save modified file
-        with open(filename, 'w') as file:
-            file.writelines(lines)
-
-
-    atomsk_command = f"atomsk {filename} -orthogonal-cell -ow lmp -v 0"
-    subprocess.run(atomsk_command, shell=True, check=True)
-
-
+            atomsk_command = f"echo n | atomsk {filename} -orthogonal-cell -ow lmp -v 0"
+            subprocess.run(atomsk_command, shell=True, check=True)
+            atoms = io.read(filename, format="lammps-data")
+            # Get number of atoms
+            natoms = len(atoms)
+            if typecount % natoms == 0:
+                for i in range(int(np.sqrt(typecount/natoms))+1, 0, -1):
+                    if typecount/natoms % i == 0:
+                        a = int(i)
+                        b = int(typecount/natoms / i)
+                        break        
+            atomsk_command = f"echo n | atomsk {filename} -duplicate {a} {b} 1 -ow lmp -v 0"
+            subprocess.run(atomsk_command, shell=True, check=True)
+            process_h(filename)
 
     dim = get_model_dimensions(filename)
     duplicate_a = round(x / dim['xhi'])
@@ -417,6 +350,7 @@ def stacking(var,layer=2,sheetvsheet=False):
     g = 0
     i = 0
     c = 0
+
     for element,count in var['pot']['2D'].items():
         i += c
         for l in range(1,layer+1):

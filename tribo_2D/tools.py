@@ -230,7 +230,6 @@ def num_atoms_lmp(filename):
     atom_types = {}
     elem = {}
     for i, line in enumerate(lines):
-        stripped_line = line.strip()
 
         if line.strip() == 'Masses':
             masses_section = True
@@ -260,9 +259,7 @@ def num_atoms_lmp(filename):
         atoms_section = False
         for l, line in enumerate(lines):
             stripped_line = line.strip()
-            if re.match(r'^\s*\d+\s+atom types\s*$', stripped_line):
-                lines[i]= f"  {len(atom_types)}  atom types\n"
-                continue
+
             if 'Atoms' in line:
                 atoms_section = True
                 continue
@@ -278,12 +275,16 @@ def num_atoms_lmp(filename):
 
     masses_section = False
     for i, line in enumerate(lines):
+        if re.match(r'^\s*\d+\s+atom types\s*$', line.strip()):
+            lines[i]= f"  {len(elem)}  atom types\n"
+            continue
+
         if line.strip() == 'Masses':
             masses_section = True
             continue
         
         if masses_section:
-            for l in range(1,len(atom_types)+1):
+            for l in range(1,len(elem)+1):
                 lines[i] += f"{l} {elem[l][1]}  #{elem[l][0]}\n"
             break
         
@@ -291,4 +292,107 @@ def num_atoms_lmp(filename):
     with open(filename, 'w') as file:
         file.writelines(lines)
     
-    return elem
+
+def process_h(filename):
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+
+
+    masses_section = False
+    atoms_section = False
+    
+    atom_types = {}
+    for i, line in enumerate(lines):
+
+        if line.strip() == 'Masses':
+            masses_section = True
+            continue  
+        
+        if masses_section:
+            if 'Atoms' in line:
+                break
+            
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+
+            atom_type_id = int(parts[0])  
+            mass = float(parts[1])  
+            if '#' in line:
+                atom_type_name = line.split('#')[-1].strip()
+                lines[i]= ''
+            else:
+                atom_type_name = f'Unknown_{atom_type_id}'  
+            atom_types[atom_type_id] = (atom_type_name, mass)
+
+    # Update atom types
+    modified_lines = set() 
+    mod_lines = {}
+    pre_elem = {}
+    elem = {}
+    # for i in range(1,len(atom_types)+1):
+    for i in range(1,len(atom_types)+1):
+        atoms_section = False
+        t = i
+        for l, line in enumerate(lines):
+            stripped_line = line.strip()
+            
+            if 'Atoms' in line:
+                atoms_section = True
+                continue
+            
+            if atoms_section and stripped_line and l not in modified_lines:
+                parts = stripped_line.split()
+
+                if parts[1] == str(i):
+                    parts[1] = parts[0] = str(t)
+                    lines[l]= ''
+                    mod_lines[t] = '  '.join(parts) + '\n'
+                    modified_lines.add(l)
+                    pre_elem[t] = atom_types[i]
+                    t+= len(atom_types)
+
+    modified_lines = set() 
+
+    a = 1
+    unique = list(set(val[0] for val in atom_types.values()))
+
+    atom_lines = {}
+    for i in unique:
+
+        atoms_section = False
+        for l in range(1,len(mod_lines)+1):
+        
+            stripped_line = mod_lines[l].strip()
+            
+            parts = stripped_line.split()
+
+            if pre_elem[int(parts[1])][0] == i:
+                elem[a] = pre_elem[int(parts[1])]
+                parts[1] = str(a)
+                atom_lines[a] = '  '.join(parts) + '\n'
+                a+= 1
+              
+
+    # Update atom types line
+    masses_section = False
+    for i, line in enumerate(lines):
+        if re.match(r'^\s*\d+\s+atom types\s*$', line.strip()):
+            lines[i]= f"  {len(elem)}  atom types\n"
+            continue
+
+        if line.strip() == 'Masses':
+            masses_section = True
+            continue
+        
+        if masses_section:
+            for l in range(1,len(elem)+1):
+                lines[i] += f"{l} {elem[l][1]}  #{elem[l][0]}\n"
+            break
+
+    # Write updated file
+    with open(filename, 'w') as f:
+        f.writelines(lines)
+    with open(filename, 'a') as f:  # 'a' means append mode
+        for line in atom_lines.values():
+            f.write(line)
