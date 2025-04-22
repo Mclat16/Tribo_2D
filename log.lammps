@@ -13,55 +13,55 @@ neighbor        0.3 bin
 neigh_modify    every 1 delay 0 check yes #every 5
 
 boundary   	    p p f
-region box block 0.0 100.112067213014 0.0 100.389002921108 -5 100
+region box block 0.0 101.89012686992 0.0 99.26936804718 -5 100
 create_box      18 box
-Created orthogonal box = (0 0 -5) to (100.11207 100.389 100)
+Created orthogonal box = (0 0 -5) to (101.89013 99.269368 100)
   2 by 2 by 2 MPI processor grid
 
 #----------------- Read data files -----------------------
 
-read_data       scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/sub.lmp add append group sub
+read_data       scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/sub.lmp add append group sub
 Reading data file ...
-  orthogonal box = (0 0 -5) to (100.11207 100.389 100)
+  orthogonal box = (0 0 -5) to (101.89013 99.269368 100)
   2 by 2 by 2 MPI processor grid
   reading atoms ...
 WARNING: Non-zero imageflag(s) in z direction for non-periodic boundary reset to zero (src/read_data.cpp:1548)
-  5001 atoms
+  5031 atoms
   reading velocities ...
-  5001 velocities
-  read_data CPU = 0.017 seconds
-read_data       scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/tip.lmp add append shift 50.056033606507 50.194501460554 55.0  group tip offset 3 0 0 0 0
+  5031 velocities
+  read_data CPU = 0.013 seconds
+read_data       scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/tip.lmp add append shift 50.94506343496 49.63468402359 55.0  group tip offset 3 0 0 0 0
 Reading data file ...
-  orthogonal box = (0 0 -5) to (100.11207 100.389 100)
+  orthogonal box = (0 0 -5) to (101.89013 99.269368 100)
   2 by 2 by 2 MPI processor grid
   reading atoms ...
   505 atoms
   reading velocities ...
   505 velocities
   read_data CPU = 0.002 seconds
-read_data       scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/h-CrO2_1.lmp add append shift 0.0 0.0 14.5 group 2D offset 6 0 0 0 0
+read_data       scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/system_build/h-MoS2_1.lmp add append shift 0.0 0.0 14.5 group 2D offset 6 0 0 0 0
 Reading data file ...
-  orthogonal box = (0 0 -5) to (100.11207 100.389 100)
+  orthogonal box = (0 0 -5) to (101.89013 99.269368 100)
   2 by 2 by 2 MPI processor grid
   reading atoms ...
-  5016 atoms
+  3456 atoms
   reading velocities ...
-  5016 velocities
-  read_data CPU = 0.011 seconds
+  3456 velocities
+  read_data CPU = 0.010 seconds
 
 # Apply potentials
 
-include        scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_1/lammps/system.in.settings
+include        scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_1/lammps/system.in.settings
 mass 1*3 28.085 #Si sub
 mass 4*6 28.085 #Si tip
-mass 7*10 51.9961 #Cr 2D
-mass 11*18 15.999 #O 2D
+mass 7*10 95.95 #Mo 2D
+mass 11*18 32.06 #S 2D
 group sub_all type 1 2 3
-5001 atoms in group sub_all
+5031 atoms in group sub_all
 group sub_fix type 2
-999 atoms in group sub_fix
+1008 atoms in group sub_fix
 group sub_thermo type 3
-1530 atoms in group sub_thermo
+1543 atoms in group sub_thermo
 group tip_all type 4 5 6
 505 atoms in group tip_all
 group tip_fix type 5
@@ -69,26 +69,26 @@ group tip_fix type 5
 group tip_thermo type 6
 68 atoms in group tip_thermo
 group 2D_all type 7 8 9 10 11 12 13 14 15 16 17 18
-5016 atoms in group 2D_all
+3456 atoms in group 2D_all
 group layer_1 type 7 8 9 10 11 12 13 14 15 16 17 18
-5016 atoms in group layer_1
+3456 atoms in group layer_1
 group mobile union tip_thermo sub_thermo
-1598 atoms in group mobile
+1611 atoms in group mobile
 pair_style hybrid sw sw sw  lj/cut 8.0
-pair_coeff * * sw 1 scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/Si.sw Si  Si  Si  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL # interlayer Sub
-Reading sw potential file scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/Si.sw with DATE: 2007-06-11
-pair_coeff * * sw 2 scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/Si.sw NULL  NULL  NULL  Si  Si  Si  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL # interlayer Tip
-Reading sw potential file scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/Si.sw with DATE: 2007-06-11
-pair_coeff * * sw 3 scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/h-CrO2.sw NULL  NULL  NULL  NULL  NULL  NULL  Cr1  Cr2  Cr3  Cr4  O1  O2  O3  O4  O5  O6  O7  O8 # interlayer '2D' Layer 1
-pair_coeff 1*3 7*10 lj/cut 0.0033673013365522844 3.659
-pair_coeff 4*6 7*10 lj/cut 0.0033673013365522844 3.659
-pair_coeff 1*3 11*18 lj/cut 0.006734602673104569 3.8975
-pair_coeff 4*6 11*18 lj/cut 0.006734602673104569 3.8975
+pair_coeff * * sw 1 scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/Si.sw Si  Si  Si  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL # interlayer Sub
+Reading sw potential file scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/Si.sw with DATE: 2007-06-11
+pair_coeff * * sw 2 scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/Si.sw NULL  NULL  NULL  Si  Si  Si  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL  NULL # interlayer Tip
+Reading sw potential file scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/Si.sw with DATE: 2007-06-11
+pair_coeff * * sw 3 scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/potentials/h-MoS2.sw NULL  NULL  NULL  NULL  NULL  NULL  Mo1  Mo2  Mo3  Mo4  S1  S2  S3  S4  S5  S6  S7  S8 # interlayer '2D' Layer 1
+pair_coeff 1*3 7*10 lj/cut 0.006506244304790185 3.6734999999999998
+pair_coeff 4*6 7*10 lj/cut 0.006506244304790185 3.6734999999999998
+pair_coeff 1*3 11*18 lj/cut 0.014391684663430299 4.165
+pair_coeff 4*6 11*18 lj/cut 0.014391684663430299 4.165
 pair_coeff 1*3 4*6  lj/cut 0.0174320868 4.295
 
 #----------------- Create visualisation files ------------
 
-dump            sys all atom 1000 ./scripts/afm/h-CrO2/size_100x_100y/sub_aSi/tip_Si_r25/K300/visuals/system_1.lammpstrj
+dump            sys all atom 10000 ./scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/visuals/system_1.lammpstrj
 
 #----------------- Minimize the system -------------------
 
@@ -118,7 +118,7 @@ Neighbor list info ...
   max neighbors/atom: 2000, page size: 100000
   master list distance cutoff = 8.3
   ghost atom cutoff = 8.3
-  binsize = 4.15, bins = 25 25 26
+  binsize = 4.15, bins = 25 24 26
   6 neighbor lists, perpetual/occasional/extra = 6 0 0
   (1) pair sw, perpetual, skip from (6)
       attributes: full, newton on, cut 4.07118
@@ -131,7 +131,7 @@ Neighbor list info ...
       stencil: none
       bin: none
   (3) pair sw, perpetual, skip trim from (6)
-      attributes: full, newton on, cut 2.836404
+      attributes: full, newton on, cut 3.458796
       pair build: skip/trim
       stencil: none
       bin: none
@@ -150,52 +150,52 @@ Neighbor list info ...
       pair build: full/bin/atomonly
       stencil: full/bin/3d
       bin: standard
-Per MPI rank memory allocation (min/avg/max) = 7.553 | 7.607 | 7.661 Mbytes
+Per MPI rank memory allocation (min/avg/max) = 7.558 | 7.602 | 7.647 Mbytes
    Step          Temp          E_pair         E_mol          TotEng         Press     
-         0   144.61637     -19025.447      0             -18828.777      8634.4429    
-        73   144.61637     -23109.998      0             -22913.327     -1061.7047    
-Loop time of 0.284993 on 8 procs for 73 steps with 10522 atoms
+         0   170.34097     -21043.962      0             -20845.996      1924.8062    
+        52   170.34097     -24839.231      0             -24641.264     -2893.0487    
+Loop time of 0.173653 on 8 procs for 52 steps with 8992 atoms
 
-99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+99.2% CPU use with 8 MPI tasks x 1 OpenMP threads
 
 Minimization stats:
   Stopping criterion = energy tolerance
   Energy initial, next-to-last, final = 
-     -19025.4472850922  -23108.2447065831  -23109.9978609246
-  Force two-norm initial, final = 4545.9192 6.0294202
-  Force max component initial, final = 2155.6681 2.4229087
-  Final line search alpha, max atom move = 0.035198301 0.08528227
-  Iterations, force evaluations = 73 73
+     -21043.9622352611  -24836.7807083439   -24839.230820164
+  Force two-norm initial, final = 15927.9 7.7882071
+  Force max component initial, final = 6719.3225 2.1878509
+  Final line search alpha, max atom move = 0.037439172 0.081911324
+  Iterations, force evaluations = 52 52
 
 MPI task timing breakdown:
 Section |  min time  |  avg time  |  max time  |%varavg| %total
 ---------------------------------------------------------------
-Pair    | 0.002754   | 0.070773   | 0.14297    |  25.5 | 24.83
-Neigh   | 0.0062672  | 0.061517   | 0.11762    |  22.2 | 21.59
-Comm    | 0.0052753  | 0.012987   | 0.026607   |   7.1 |  4.56
+Pair    | 0.0015677  | 0.049309   | 0.099299   |  21.5 | 28.40
+Neigh   | 0.0028733  | 0.034166   | 0.065843   |  16.9 | 19.67
+Comm    | 0.0022015  | 0.0045887  | 0.0081548  |   3.7 |  2.64
 Output  | 0          | 0          | 0          |   0.0 |  0.00
 Modify  | 0          | 0          | 0          |   0.0 |  0.00
-Other   |            | 0.1397     |            |       | 49.02
+Other   |            | 0.08559    |            |       | 49.29
 
-Nlocal:        1315.25 ave        2511 max         125 min
+Nlocal:           1124 ave        2132 max         125 min
 Histogram: 4 0 0 0 0 0 0 0 0 4
-Nghost:        1058.62 ave        1950 max         180 min
+Nghost:        931.125 ave        1689 max         180 min
 Histogram: 4 0 0 0 0 0 0 0 0 4
 Neighs:              0 ave           0 max           0 min
 Histogram: 8 0 0 0 0 0 0 0 0 0
 
 Total # of neighbors = 0
 Ave neighs/atom = 0
-Neighbor list builds = 36
-Dangerous builds = 1
+Neighbor list builds = 26
+Dangerous builds = 0
 
 timestep        0.001
 thermo          100
 
 group           fixset union sub_fix tip_fix
-1260 atoms in group fixset
+1269 atoms in group fixset
 group           system subtract all fixset
-9262 atoms in group system
+7723 atoms in group system
 
 velocity        system create 300 492847948
 
@@ -217,49 +217,2397 @@ velocity        sub_fix set 0.0 0.0 0.0
 fix             tip_f tip_fix rigid/nve single force * off off off torque * off off off
   1 rigid bodies with 261 atoms
 
-run             10000
+run             1000
 WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
-Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.828 | 8.882 Mbytes
+Per MPI rank memory allocation (min/avg/max) = 8.764 | 8.808 | 8.853 Mbytes
    Step          Temp          E_pair         E_mol          TotEng         Press     
-        73   270.7367      -23109.998      0             -22750.874     -894.13132    
-       100   188.8629      -22997.601      0             -22747.081     -1070.1853    
-       200   358.71188     -23210.799      0             -22734.98      -595.80962    
-       300   451.73367     -23325.469      0             -22726.258     -894.66914    
-       400   539.60123     -23435.132      0             -22719.368     -875.10643    
-       500   604.66271     -23516.949      0             -22714.883     -4.0876532    
-       600   648.66323     -23573.952      0             -22713.521     -663.97527    
-       700   696.3977      -23634.634      0             -22710.885     -489.48479    
-       800   750.99895     -23706.882      0             -22710.707      27.115878    
-       900   776.67131     -23740.254      0             -22710.025      499.15844    
-      1000   820.14683     -23799.734      0             -22711.836      614.7101     
-      1100   838.82872     -23825.408      0             -22712.729      80.180178    
-      1200   884.81494     -23888.784      0             -22715.106     -314.1582     
-      1300   905.88607     -23918.468      0             -22716.84      -217.87655    
-      1400   950.14483     -23980.503      0             -22720.167     -222.53859    
-      1500   965.33726     -24004.521      0             -22724.033     -325.32855    
-      1600   984.00569     -24031.778      0             -22726.526     -45.292026    
-      1700   1000.5133     -24059.578      0             -22732.429     -679.86354    
-      1800   1037.5625     -24111.897      0             -22735.604      31.875412    
-      1900   1051.8851     -24135.49       0             -22740.198     -711.83464    
-      2000   1070.892      -24164.867      0             -22744.364     -750.13201    
-      2100   1089.8558     -24195.912      0             -22750.253     -1057.3807    
-      2200   1115.6934     -24233.718      0             -22753.787     -282.55656    
-      2300   1132.9647     -24262.763      0             -22759.922     -529.37165    
-      2400   1145.065      -24283.95       0             -22765.058     -625.31651    
-      2500   1145.8773     -24290.966      0             -22770.997     -383.71145    
-      2600   1172.0552     -24330.752      0             -22776.059      389.41855    
-      2700   1185.8137     -24354.05       0             -22781.106      143.96767    
-      2800   1194.1291     -24370.626      0             -22786.653     -930.24025    
-      2900   1217.0791     -24405.195      0             -22790.779     -945.87353    
-      3000   1235.6097     -24434.297      0             -22795.301     -597.57805    
-      3100   1224.2895     -24424.577      0             -22800.597     -481.3906     
-      3200   1253.7525     -24470.113      0             -22807.051     -317.17419    
-      3300   1262.7798     -24486.398      0             -22811.362     -559.16272    
-      3400   1269.6911     -24499.566      0             -22815.362      312.91955    
-      3500   1283.6299     -24522.691      0             -22819.998     -933.28519    
-      3600   1288.7461     -24534.328      0             -22824.848     -239.7359     
-      3700   1314.9675     -24572.561      0             -22828.299     -815.25909    
-      3800   1292.9588     -24549.11       0             -22834.042     -609.82066    
-      3900   1304.5331     -24568.054      0             -22837.633     -13.253675    
-ERROR: Lost atoms: original 10522 current 10521 (src/thermo.cpp:494)
-Last command: run             10000
+        52   265.30005     -24839.231      0             -24539.787     -2783.4879    
+       100   133.21814     -24683.069      0             -24532.706     -2768.7397    
+       200   167.01572     -24710.539      0             -24522.029     -2784.9391    
+       300   195.86892     -24736.724      0             -24515.647     -3493.7214    
+       400   195.5075      -24729.903      0             -24509.234     -3554.028     
+       500   205.74092     -24739.6        0             -24507.38      -3121.1929    
+       600   214.02756     -24748.312      0             -24506.739     -3600.2089    
+       700   215.76542     -24748.796      0             -24505.261     -2346.5932    
+       800   230.17688     -24767.213      0             -24507.412     -2736.8734    
+       900   234.75915     -24775.728      0             -24510.756     -2968.2035    
+      1000   239.65866     -24784.559      0             -24514.056     -3207.7567    
+      1052   243.53483     -24789.345      0             -24514.467     -2785.0534    
+Loop time of 2.44893 on 8 procs for 1000 steps with 8992 atoms
+
+Performance: 35.281 ns/day, 0.680 hours/ns, 408.342 timesteps/s, 3.672 Matom-step/s
+99.5% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.047754   | 0.91475    | 1.8046     |  90.3 | 37.35
+Neigh   | 0.031147   | 0.24288    | 0.45856    |  42.7 |  9.92
+Comm    | 0.10801    | 0.83334    | 1.5323     |  76.2 | 34.03
+Output  | 0.00037529 | 0.00039522 | 0.00051642 |   0.0 |  0.02
+Modify  | 0.066048   | 0.4441     | 0.82195    |  56.7 | 18.13
+Other   |            | 0.01347    |            |       |  0.55
+
+Nlocal:           1124 ave        2126 max         125 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         924.75 ave        1674 max         180 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 159
+Dangerous builds = 0
+
+unfix           tip_f
+
+##########################################################
+#--------------------Tip Indentation---------------------#
+##########################################################
+#----------------- Displace tip closer -------------------
+
+displace_atoms  tip_all move 0.0 0.0 -20.0 units box
+Displacing atoms ...
+
+#----------------- Apply constraints ---------------------
+
+fix             tip_f tip_fix rigid/nve single force * off off on torque * off off off
+  1 rigid bodies with 261 atoms
+
+variable        f equal 0.0
+variable find index 2 3 5 8 10 12 20 25 30 37 45 55 70 85 100
+label force_loop
+#----------------- Set up initial parameters -------------
+
+variable        num_floads equal 10
+variable        r equal 0.0
+variable        fincr equal (${find}-${f})/${num_floads}
+variable        fincr equal (2-${f})/${num_floads}
+variable        fincr equal (2-0)/${num_floads}
+variable        fincr equal (2-0)/10
+thermo_modify   lost ignore flush yes
+
+#----------------- Apply pressure to the tip -------------
+
+variable i loop ${num_floads}
+variable i loop 10
+label loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 0+${fincr}
+variable f equal 0+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0004782765780276
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.887 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1052   243.53483     -24789.345      0             -24514.467     -2894.6597    
+      1100   245.18399     -24792.474      0             -24515.735     -2814.3836    
+      1152   242.64976     -24792.252      0             -24518.374     -2409.2807    
+Loop time of 0.25039 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.506 ns/day, 0.696 hours/ns, 399.377 timesteps/s, 3.591 Matom-step/s
+99.5% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.3615e-05 | 0.09082    | 0.1841     |  30.1 | 36.27
+Neigh   | 0.0007011  | 0.024262   | 0.047968   |  15.1 |  9.69
+Comm    | 0.009824   | 0.1226     | 0.23533    |  31.4 | 48.96
+Output  | 7.3397e-05 | 8.8977e-05 | 0.00017484 |   0.0 |  0.04
+Modify  | 0.0070408  | 0.011068   | 0.020625   |   4.4 |  4.42
+Other   |            | 0.001553   |            |       |  0.62
+
+Nlocal:           1124 ave        2257 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1049.88 ave        1852 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 16
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 0.2+${fincr}
+variable f equal 0.2+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0009565531560552
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.887 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1152   242.64976     -24792.252      0             -24518.374     -2476.3906    
+      1200   247.14979     -24797.97       0             -24519.012     -2203.1131    
+      1252   246.45565     -24799.249      0             -24521.075     -2431.5577    
+Loop time of 0.252864 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.169 ns/day, 0.702 hours/ns, 395.469 timesteps/s, 3.556 Matom-step/s
+99.8% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.8392e-05 | 0.092656   | 0.18958    |  30.4 | 36.64
+Neigh   | 0.00066927 | 0.02326    | 0.046359   |  14.7 |  9.20
+Comm    | 0.0079553  | 0.12367    | 0.23945    |  31.5 | 48.91
+Output  | 6.6135e-05 | 8.2428e-05 | 0.00017048 |   0.0 |  0.03
+Modify  | 0.0074902  | 0.011617   | 0.02238    |   4.7 |  4.59
+Other   |            | 0.001582   |            |       |  0.63
+
+Nlocal:           1124 ave        2260 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         1051.5 ave        1857 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 15
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 0.4+${fincr}
+variable f equal 0.4+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0014348297340828
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1252   246.45565     -24799.249      0             -24521.075     -2335.2541    
+      1300   251.86943     -24807.163      0             -24522.878     -1962.8994    
+      1352   246.87332     -24805.182      0             -24526.536     -1820.3793    
+Loop time of 0.249533 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.625 ns/day, 0.693 hours/ns, 400.748 timesteps/s, 3.604 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.608e-05  | 0.093717   | 0.19108    |  30.6 | 37.56
+Neigh   | 0.00056306 | 0.020816   | 0.041196   |  14.0 |  8.34
+Comm    | 0.0090303  | 0.12226    | 0.23562    |  31.3 | 48.99
+Output  | 6.5383e-05 | 8.1496e-05 | 0.00016738 |   0.0 |  0.03
+Modify  | 0.0069307  | 0.011186   | 0.020476   |   4.6 |  4.48
+Other   |            | 0.001476   |            |       |  0.59
+
+Nlocal:           1124 ave        2263 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         1052.5 ave        1861 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 14
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 0.6+${fincr}
+variable f equal 0.6+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0019131063121104
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1352   246.87332     -24805.182      0             -24526.536     -1829.6515    
+      1400   242.7594      -24801.132      0             -24527.129     -1193.5393    
+      1452   239.34218     -24799.192      0             -24529.047     -1430.6868    
+Loop time of 0.260868 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 33.120 ns/day, 0.725 hours/ns, 383.335 timesteps/s, 3.447 Matom-step/s
+99.4% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 9.3207e-05 | 0.097537   | 0.20015    |  31.2 | 37.39
+Neigh   | 0.0012056  | 0.020622   | 0.040012   |  13.4 |  7.91
+Comm    | 0.011836   | 0.12734    | 0.24295    |  31.0 | 48.82
+Output  | 0.00011181 | 0.00014152 | 0.00030875 |   0.0 |  0.05
+Modify  | 0.0073882  | 0.013407   | 0.02465    |   5.6 |  5.14
+Other   |            | 0.001817   |            |       |  0.70
+
+Nlocal:           1124 ave        2261 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1051.25 ave        1863 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 13
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 0.8+${fincr}
+variable f equal 0.8+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.002391382890138
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1452   239.34218     -24799.192      0             -24529.047     -1464.7127    
+      1500   237.18195     -24800.369      0             -24532.662     -1451.7259    
+      1552   236.27548     -24800.4        0             -24533.716     -940.46009    
+Loop time of 0.280824 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 30.767 ns/day, 0.780 hours/ns, 356.095 timesteps/s, 3.202 Matom-step/s
+99.4% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00011187 | 0.10175    | 0.20758    |  31.9 | 36.23
+Neigh   | 0.0011464  | 0.018372   | 0.036283   |  12.7 |  6.54
+Comm    | 0.026843   | 0.13705    | 0.24729    |  28.5 | 48.80
+Output  | 0.00011284 | 0.00013961 | 0.00029986 |   0.0 |  0.05
+Modify  | 0.0082466  | 0.021487   | 0.041483   |   9.3 |  7.65
+Other   |            | 0.002017   |            |       |  0.72
+
+Nlocal:           1124 ave        2267 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1052.12 ave        1862 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 11
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 1+${fincr}
+variable f equal 1+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0028696594681656
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1552   236.27548     -24800.4        0             -24533.716     -918.15293    
+      1600   229.51496     -24794.669      0             -24535.615     -1424.7693    
+      1652   234.37843     -24801.07       0             -24536.527     -1012.9898    
+Loop time of 0.261702 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 33.015 ns/day, 0.727 hours/ns, 382.114 timesteps/s, 3.436 Matom-step/s
+99.2% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00011222 | 0.10015    | 0.20432    |  31.6 | 38.27
+Neigh   | 0.0014059  | 0.01856    | 0.035672   |  12.3 |  7.09
+Comm    | 0.012592   | 0.12746    | 0.24262    |  31.0 | 48.70
+Output  | 8.6082e-05 | 0.00010396 | 0.00020091 |   0.0 |  0.04
+Modify  | 0.007855   | 0.013689   | 0.027017   |   5.7 |  5.23
+Other   |            | 0.001742   |            |       |  0.67
+
+Nlocal:           1124 ave        2255 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1049.25 ave        1850 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 11
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 1.2+${fincr}
+variable f equal 1.2+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0033479360461932
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1652   234.37843     -24801.07       0             -24536.527     -996.53694    
+      1700   235.68477     -24804.078      0             -24538.061     -882.66675    
+      1752   237.75516     -24808.435      0             -24540.081     -1179.1733    
+Loop time of 0.258593 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 33.412 ns/day, 0.718 hours/ns, 386.708 timesteps/s, 3.477 Matom-step/s
+99.5% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00010799 | 0.099351   | 0.20442    |  31.5 | 38.42
+Neigh   | 0.0010241  | 0.016783   | 0.033083   |  12.0 |  6.49
+Comm    | 0.012193   | 0.1262     | 0.24048    |  30.4 | 48.80
+Output  | 6.431e-05  | 8.1785e-05 | 0.00016791 |   0.0 |  0.03
+Modify  | 0.0077513  | 0.014455   | 0.028146   |   6.4 |  5.59
+Other   |            | 0.001723   |            |       |  0.67
+
+Nlocal:           1124 ave        2258 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1049.88 ave        1856 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 1.4+${fincr}
+variable f equal 1.4+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0038262126242208
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1752   237.75516     -24808.435      0             -24540.081     -1222.3825    
+      1800   241.98593     -24815.03       0             -24541.9       -1568.079     
+      1852   244.44749     -24817.958      0             -24542.05      -1790.2437    
+Loop time of 0.261822 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 33.000 ns/day, 0.727 hours/ns, 381.939 timesteps/s, 3.434 Matom-step/s
+99.5% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00011667 | 0.09869    | 0.20203    |  31.4 | 37.69
+Neigh   | 0.00128    | 0.020046   | 0.039031   |  13.1 |  7.66
+Comm    | 0.011238   | 0.12763    | 0.24399    |  31.1 | 48.75
+Output  | 6.2196e-05 | 7.6435e-05 | 0.0001456  |   0.0 |  0.03
+Modify  | 0.0078686  | 0.013619   | 0.023128   |   5.4 |  5.20
+Other   |            | 0.001761   |            |       |  0.67
+
+Nlocal:           1124 ave        2260 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1053.75 ave        1860 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 12
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 1.6+${fincr}
+variable f equal 1.6+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0043044892022484
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1852   244.44749     -24817.958      0             -24542.05      -1712.2989    
+      1900   244.60511     -24819.277      0             -24543.191     -2142.0786    
+      1952   251.69836     -24829.027      0             -24544.935     -1892.0514    
+Loop time of 0.255787 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 33.778 ns/day, 0.711 hours/ns, 390.950 timesteps/s, 3.515 Matom-step/s
+99.4% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 8.4009e-05 | 0.09671    | 0.1984     |  31.1 | 37.81
+Neigh   | 0.0013221  | 0.019689   | 0.038151   |  13.0 |  7.70
+Comm    | 0.010058   | 0.12476    | 0.23941    |  31.0 | 48.77
+Output  | 0.000137   | 0.00017599 | 0.00040848 |   0.0 |  0.07
+Modify  | 0.0073883  | 0.01265    | 0.021408   |   5.1 |  4.95
+Other   |            | 0.001805   |            |       |  0.71
+
+Nlocal:           1124 ave        2256 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         1050.5 ave        1857 max         251 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 12
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 1.8+${fincr}
+variable f equal 1.8+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.004782765780276
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      1952   251.69836     -24829.027      0             -24544.935     -1909.9063    
+      2000   251.55944     -24828.958      0             -24545.023     -1973.481     
+      2052   257.83876     -24836.775      0             -24545.752     -2057.9009    
+Loop time of 0.247976 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.842 ns/day, 0.689 hours/ns, 403.265 timesteps/s, 3.626 Matom-step/s
+99.4% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.8989e-05 | 0.094345   | 0.1942     |  30.7 | 38.05
+Neigh   | 0.00081221 | 0.018816   | 0.037236   |  13.0 |  7.59
+Comm    | 0.0080739  | 0.12129    | 0.23446    |  30.8 | 48.91
+Output  | 6.887e-05  | 8.8381e-05 | 0.00018393 |   0.0 |  0.04
+Modify  | 0.0070656  | 0.011941   | 0.021012   |   5.2 |  4.82
+Other   |            | 0.001499   |            |       |  0.60
+
+Nlocal:           1124 ave        2257 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1052.38 ave        1866 max         252 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 12
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+##########################################################
+#---------------------Equilibration----------------------#
+##########################################################
+
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.004782765780276
+variable        dispz equal xcm(tip_fix,z)
+
+run 100 pre yes post no
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      2052   257.83876     -24836.775      0             -24545.752     -2202.3294    
+      2100   254.5299      -24836.426      0             -24549.138     -2400.9118    
+      2152   252.40019     -24835.091      0             -24550.207     -3123.5927    
+Loop time of 0.244141 on 8 procs for 100 steps with 8992 atoms
+
+
+# Prepare to loop for displacement checks
+
+label check_r
+
+variable disp_l equal ${dispz}
+variable disp_l equal 45.1355781705098
+variable disp_h equal ${dispz}
+variable disp_h equal 45.1355781705098
+
+variable disploop loop 50
+label disp
+
+# run 100 pre no post no
+
+# if '${dispz}>${disp_h}' then 'variable disp_h equal ${dispz}'
+# if '${dispz}<${disp_l}' then 'variable disp_l equal ${dispz}'
+
+# next disploop
+# jump SELF disp
+
+# variable r equal ${disp_h}-${disp_l}
+
+# # Check if r is less than 0.1
+
+# if '${r} < 20' then 'jump SELF loop_end' else 'jump SELF check_r'
+
+run 1000
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.83 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      2152   252.40019     -24835.091      0             -24550.207     -3075.2791    
+      2200   249.93974     -24833.009      0             -24550.902     -3209.7243    
+      2300   249.30595     -24831.486      0             -24550.094     -2815.2853    
+      2400   241.89729     -24823.674      0             -24550.645     -2927.2119    
+      2500   241.32714     -24823.789      0             -24551.403     -2792.6551    
+      2600   233.89328     -24814.764      0             -24550.769     -2957.0244    
+      2700   231.1076      -24815.415      0             -24554.563     -2865.1307    
+      2800   228.37929     -24815.957      0             -24558.185     -2910.0494    
+      2900   228.22627     -24816.696      0             -24559.098     -3013.4388    
+      3000   226.9508      -24819.275      0             -24563.115     -3078.9719    
+      3100   225.39925     -24819.964      0             -24565.555     -2826.9805    
+      3152   227.84777     -24822.37       0             -24565.199     -3201.6275    
+Loop time of 2.31955 on 8 procs for 1000 steps with 8992 atoms
+
+Performance: 37.249 ns/day, 0.644 hours/ns, 431.119 timesteps/s, 3.877 Matom-step/s
+99.5% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00050961 | 0.92169    | 1.8856     |  96.0 | 39.74
+Neigh   | 0.0057155  | 0.14346    | 0.28452    |  36.2 |  6.18
+Comm    | 0.068072   | 1.1345     | 2.2011     |  95.8 | 48.91
+Output  | 0.00040724 | 0.00050898 | 0.0010616  |   0.0 |  0.02
+Modify  | 0.068956   | 0.10524    | 0.18841    |  13.6 |  4.54
+Other   |            | 0.01414    |            |       |  0.61
+
+Nlocal:           1124 ave        2259 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1035.12 ave        1859 max         217 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 96
+Dangerous builds = 0
+
+# End of the loop
+
+label loop_end
+
+write_data scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_1/data/load_$(v_find)N.data
+write_data scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_1/data/load_2N.data
+System init for write_data ...
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+next find
+jump SELF force_loop
+#----------------- Set up initial parameters -------------
+
+variable        num_floads equal 10
+variable        r equal 0.0
+variable        fincr equal (${find}-${f})/${num_floads}
+variable        fincr equal (3-${f})/${num_floads}
+variable        fincr equal (3-2)/${num_floads}
+variable        fincr equal (3-2)/10
+thermo_modify   lost ignore flush yes
+
+#----------------- Apply pressure to the tip -------------
+
+variable i loop ${num_floads}
+variable i loop 10
+label loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2+${fincr}
+variable f equal 2+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0050219040692898
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3152   227.84777     -24822.37       0             -24565.199     -3185.4029    
+      3200   228.90016     -24826.284      0             -24567.924     -2876.5432    
+      3252   230.01233     -24829.147      0             -24569.532     -2705.5777    
+Loop time of 0.234033 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.918 ns/day, 0.650 hours/ns, 427.291 timesteps/s, 3.842 Matom-step/s
+99.2% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.6891e-05 | 0.091288   | 0.18718    |  30.2 | 39.01
+Neigh   | 0.00053772 | 0.015971   | 0.031428   |  12.1 |  6.82
+Comm    | 0.0071804  | 0.11442    | 0.22155    |  30.3 | 48.89
+Output  | 6.6234e-05 | 8.1121e-05 | 0.00016141 |   0.0 |  0.03
+Modify  | 0.0068907  | 0.010778   | 0.018492   |   4.3 |  4.61
+Other   |            | 0.001497   |            |       |  0.64
+
+Nlocal:           1124 ave        2256 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1033.62 ave        1854 max         217 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.1+${fincr}
+variable f equal 2.1+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0052610423583036
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3252   230.01233     -24829.147      0             -24569.532     -2732.2765    
+      3300   230.26202     -24830.041      0             -24570.145     -3282.831     
+      3352   230.84176     -24832.493      0             -24571.942     -2960.9867    
+Loop time of 0.235839 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.635 ns/day, 0.655 hours/ns, 424.018 timesteps/s, 3.813 Matom-step/s
+99.0% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 7.0703e-05 | 0.092755   | 0.18939    |  30.4 | 39.33
+Neigh   | 0.00057702 | 0.014979   | 0.029411   |  11.6 |  6.35
+Comm    | 0.0082453  | 0.11513    | 0.222      |  30.3 | 48.82
+Output  | 6.6625e-05 | 8.2301e-05 | 0.00016783 |   0.0 |  0.03
+Modify  | 0.0073812  | 0.011363   | 0.020487   |   4.3 |  4.82
+Other   |            | 0.001529   |            |       |  0.65
+
+Nlocal:           1124 ave        2260 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1035.12 ave        1857 max         217 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.2+${fincr}
+variable f equal 2.2+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0055001806473174
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3352   230.84176     -24832.493      0             -24571.942     -2846.3814    
+      3400   230.28518     -24834.141      0             -24574.219     -2944.0833    
+      3452   233.38726     -24839.685      0             -24576.261     -3148.4738    
+Loop time of 0.233042 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 37.075 ns/day, 0.647 hours/ns, 429.107 timesteps/s, 3.859 Matom-step/s
+99.4% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 6.741e-05  | 0.093679   | 0.19046    |  30.6 | 40.20
+Neigh   | 0.00096478 | 0.012434   | 0.024137   |  10.2 |  5.34
+Comm    | 0.0099381  | 0.11357    | 0.21714    |  29.8 | 48.73
+Output  | 6.5072e-05 | 8.0341e-05 | 0.00016233 |   0.0 |  0.03
+Modify  | 0.0072576  | 0.011673   | 0.021037   |   4.5 |  5.01
+Other   |            | 0.001603   |            |       |  0.69
+
+Nlocal:           1124 ave        2265 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         1033.5 ave        1860 max         217 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 8
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.3+${fincr}
+variable f equal 2.3+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0057393189363312
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3452   233.38726     -24839.685      0             -24576.261     -3122.5639    
+      3500   237.37147     -24846.673      0             -24578.752     -2805.3182    
+      3552   233.96959     -24843.474      0             -24579.393     -2881.836     
+Loop time of 0.233775 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.959 ns/day, 0.649 hours/ns, 427.762 timesteps/s, 3.846 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.6869e-05 | 0.092247   | 0.1892     |  30.4 | 39.46
+Neigh   | 0.00062921 | 0.014417   | 0.02828    |  11.4 |  6.17
+Comm    | 0.0080144  | 0.11429    | 0.22059    |  30.0 | 48.89
+Output  | 6.5844e-05 | 8.2614e-05 | 0.00017461 |   0.0 |  0.04
+Modify  | 0.0068806  | 0.011241   | 0.020561   |   4.7 |  4.81
+Other   |            | 0.001494   |            |       |  0.64
+
+Nlocal:           1124 ave        2255 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1029.75 ave        1851 max         211 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.4+${fincr}
+variable f equal 2.4+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.005978457225345
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3552   233.96959     -24843.474      0             -24579.393     -2914.6929    
+      3600   233.35717     -24844.581      0             -24581.191     -2937.1357    
+      3652   237.35401     -24850.471      0             -24582.57      -2703.0523    
+Loop time of 0.233071 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 37.070 ns/day, 0.647 hours/ns, 429.055 timesteps/s, 3.858 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.9338e-05 | 0.093946   | 0.19181    |  30.6 | 40.31
+Neigh   | 0.00034722 | 0.01197    | 0.023551   |  10.5 |  5.14
+Comm    | 0.0089585  | 0.11382    | 0.2186     |  29.9 | 48.83
+Output  | 6.4411e-05 | 7.9558e-05 | 0.00016237 |   0.0 |  0.03
+Modify  | 0.0073736  | 0.011742   | 0.021109   |   4.7 |  5.04
+Other   |            | 0.001515   |            |       |  0.65
+
+Nlocal:           1124 ave        2257 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:           1018 ave        1857 max         184 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 8
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.5+${fincr}
+variable f equal 2.5+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0062175955143588
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3652   237.35401     -24850.471      0             -24582.57      -2674.1904    
+      3700   238.37235     -24853.424      0             -24584.373     -2563.1661    
+      3752   239.78502     -24856.253      0             -24585.608     -2507.0126    
+Loop time of 0.236291 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.565 ns/day, 0.656 hours/ns, 423.208 timesteps/s, 3.805 Matom-step/s
+99.4% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.3352e-05 | 0.093135   | 0.19024    |  30.5 | 39.42
+Neigh   | 0.00047909 | 0.014504   | 0.028513   |  11.5 |  6.14
+Comm    | 0.0092635  | 0.1155     | 0.22178    |  30.1 | 48.88
+Output  | 6.4982e-05 | 7.8417e-05 | 0.00014939 |   0.0 |  0.03
+Modify  | 0.0070535  | 0.01159    | 0.021518   |   4.8 |  4.90
+Other   |            | 0.001486   |            |       |  0.63
+
+Nlocal:           1124 ave        2268 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1015.38 ave        1859 max         182 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.6+${fincr}
+variable f equal 2.6+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0064567338033726
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3752   239.78502     -24856.253      0             -24585.608     -2506.1242    
+      3800   241.04841     -24858.089      0             -24586.018     -2536.7744    
+      3852   239.33856     -24858.526      0             -24588.385     -2455.1877    
+Loop time of 0.240835 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 35.875 ns/day, 0.669 hours/ns, 415.222 timesteps/s, 3.734 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 6.2971e-05 | 0.094972   | 0.1939     |  30.8 | 39.43
+Neigh   | 0.00083741 | 0.013926   | 0.027207   |  11.0 |  5.78
+Comm    | 0.011195   | 0.11768    | 0.22417    |  29.8 | 48.86
+Output  | 7.0062e-05 | 8.528e-05  | 0.00016411 |   0.0 |  0.04
+Modify  | 0.0070587  | 0.012641   | 0.023315   |   5.5 |  5.25
+Other   |            | 0.001529   |            |       |  0.63
+
+Nlocal:           1124 ave        2260 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1017.62 ave        1861 max         182 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.7+${fincr}
+variable f equal 2.7+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0066958720923864
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3852   239.33856     -24858.526      0             -24588.385     -2476.5214    
+      3900   240.7401      -24861.578      0             -24589.854     -2318.7301    
+      3952   240.40499     -24862.607      0             -24591.262     -2215.3761    
+Loop time of 0.239639 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.054 ns/day, 0.666 hours/ns, 417.294 timesteps/s, 3.752 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 6.565e-05  | 0.094563   | 0.19491    |  30.7 | 39.46
+Neigh   | 0.00066007 | 0.014187   | 0.028395   |  11.3 |  5.92
+Comm    | 0.0076369  | 0.11704    | 0.22635    |  30.1 | 48.84
+Output  | 6.5393e-05 | 8.1404e-05 | 0.00016829 |   0.0 |  0.03
+Modify  | 0.0072193  | 0.012177   | 0.023207   |   5.3 |  5.08
+Other   |            | 0.001591   |            |       |  0.66
+
+Nlocal:           1124 ave        2260 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1015.62 ave        1858 max         181 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.8+${fincr}
+variable f equal 2.8+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0069350103814002
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      3952   240.40499     -24862.607      0             -24591.262     -2244.2825    
+      4000   239.13167     -24861.268      0             -24591.36      -2249.9426    
+      4052   238.34507     -24859.89       0             -24590.87      -1962.1938    
+Loop time of 0.241152 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 35.828 ns/day, 0.670 hours/ns, 414.676 timesteps/s, 3.729 Matom-step/s
+99.2% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.9351e-05 | 0.094868   | 0.19236    |  30.8 | 39.34
+Neigh   | 0.00061985 | 0.016152   | 0.031715   |  12.2 |  6.70
+Comm    | 0.0088878  | 0.11796    | 0.22694    |  31.0 | 48.92
+Output  | 6.7306e-05 | 8.1665e-05 | 0.00015684 |   0.0 |  0.03
+Modify  | 0.0069278  | 0.010644   | 0.01773    |   3.9 |  4.41
+Other   |            | 0.001443   |            |       |  0.60
+
+Nlocal:           1124 ave        2256 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1015.12 ave        1856 max         181 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 2.9+${fincr}
+variable f equal 2.9+0.1
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.007174148670414
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      4052   238.34507     -24859.89       0             -24590.87      -1930.6628    
+      4100   236.38756     -24860.71       0             -24593.9       -1854.1984    
+      4152   234.67897     -24858.495      0             -24593.613     -1595.2329    
+Loop time of 0.234619 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.826 ns/day, 0.652 hours/ns, 426.223 timesteps/s, 3.833 Matom-step/s
+99.4% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.3445e-05 | 0.094877   | 0.19294    |  30.8 | 40.44
+Neigh   | 0.00079011 | 0.014027   | 0.027215   |  11.1 |  5.98
+Comm    | 0.0065296  | 0.11466    | 0.2228     |  31.0 | 48.87
+Output  | 6.7507e-05 | 8.5748e-05 | 0.00016417 |   0.0 |  0.04
+Modify  | 0.0067128  | 0.0095867  | 0.015841   |   3.4 |  4.09
+Other   |            | 0.001377   |            |       |  0.59
+
+Nlocal:           1124 ave        2255 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        1013.12 ave        1859 max         177 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+##########################################################
+#---------------------Equilibration----------------------#
+##########################################################
+
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.007174148670414
+variable        dispz equal xcm(tip_fix,z)
+
+run 100 pre yes post no
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      4152   234.67897     -24858.495      0             -24593.613     -1582.9312    
+      4200   237.89006     -24863.411      0             -24594.905     -1694.4598    
+      4252   234.00944     -24860.258      0             -24596.132     -1522.8318    
+Loop time of 0.239762 on 8 procs for 100 steps with 8992 atoms
+
+
+# Prepare to loop for displacement checks
+
+label check_r
+
+variable disp_l equal ${dispz}
+variable disp_l equal 41.7891521308152
+variable disp_h equal ${dispz}
+variable disp_h equal 41.7891521308152
+
+variable disploop loop 50
+label disp
+
+# run 100 pre no post no
+
+# if '${dispz}>${disp_h}' then 'variable disp_h equal ${dispz}'
+# if '${dispz}<${disp_l}' then 'variable disp_l equal ${dispz}'
+
+# next disploop
+# jump SELF disp
+
+# variable r equal ${disp_h}-${disp_l}
+
+# # Check if r is less than 0.1
+
+# if '${r} < 20' then 'jump SELF loop_end' else 'jump SELF check_r'
+
+run 1000
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      4252   234.00944     -24860.258      0             -24596.132     -1495.2699    
+      4300   233.04006     -24859.813      0             -24596.78      -1653.5908    
+      4400   233.86363     -24862.081      0             -24598.119     -1495         
+      4500   234.19824     -24865.728      0             -24601.389     -1505.7921    
+      4600   233.95441     -24863.416      0             -24599.352     -2031.5909    
+      4700   243.21826     -24871.166      0             -24596.645     -2517.2637    
+      4800   243.04285     -24872.162      0             -24597.84      -2521.0499    
+      4900   241.51792     -24868.929      0             -24596.328     -2617.8507    
+      5000   241.6675      -24869.285      0             -24596.515     -2792.26      
+      5100   239.37739     -24864.333      0             -24594.148     -3106.0949    
+      5200   237.81866     -24861.911      0             -24593.485     -2810.8034    
+      5252   236.30952     -24858.962      0             -24592.239     -3148.5139    
+Loop time of 2.45168 on 8 procs for 1000 steps with 8992 atoms
+
+Performance: 35.241 ns/day, 0.681 hours/ns, 407.883 timesteps/s, 3.668 Matom-step/s
+99.3% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00048216 | 0.94381    | 1.9258     |  97.1 | 38.50
+Neigh   | 0.005456   | 0.18798    | 0.37294    |  42.1 |  7.67
+Comm    | 0.071533   | 1.1984     | 2.3258     |  99.2 | 48.88
+Output  | 0.00036201 | 0.00044556 | 0.00090028 |   0.0 |  0.02
+Modify  | 0.069385   | 0.1074     | 0.19259    |  13.6 |  4.38
+Other   |            | 0.01361    |            |       |  0.56
+
+Nlocal:           1124 ave        2260 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:          946.5 ave        1861 max          46 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 123
+Dangerous builds = 0
+
+# End of the loop
+
+label loop_end
+
+write_data scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_1/data/load_$(v_find)N.data
+write_data scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_1/data/load_3N.data
+System init for write_data ...
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+next find
+jump SELF force_loop
+#----------------- Set up initial parameters -------------
+
+variable        num_floads equal 10
+variable        r equal 0.0
+variable        fincr equal (${find}-${f})/${num_floads}
+variable        fincr equal (5-${f})/${num_floads}
+variable        fincr equal (5-3)/${num_floads}
+variable        fincr equal (5-3)/10
+thermo_modify   lost ignore flush yes
+
+#----------------- Apply pressure to the tip -------------
+
+variable i loop ${num_floads}
+variable i loop 10
+label loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 3+${fincr}
+variable f equal 3+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0076524252484416
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      5252   236.30952     -24858.962      0             -24592.239     -3072.091     
+      5300   234.3461      -24857.244      0             -24592.738     -3179.0696    
+      5352   231.37088     -24855.028      0             -24593.879     -2980.3423    
+Loop time of 0.235924 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.622 ns/day, 0.655 hours/ns, 423.865 timesteps/s, 3.811 Matom-step/s
+99.8% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.3078e-05 | 0.091685   | 0.18763    |  30.3 | 38.86
+Neigh   | 0.00050535 | 0.017191   | 0.034194   |  12.7 |  7.29
+Comm    | 0.0059591  | 0.11517    | 0.22442    |  30.8 | 48.82
+Output  | 6.3049e-05 | 7.7891e-05 | 0.00015754 |   0.0 |  0.03
+Modify  | 0.006862   | 0.010382   | 0.019241   |   4.3 |  4.40
+Other   |            | 0.00142    |            |       |  0.60
+
+Nlocal:           1124 ave        2261 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         946.75 ave        1853 max          46 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 11
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 3.2+${fincr}
+variable f equal 3.2+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0081307018264692
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      5352   231.37088     -24855.028      0             -24593.879     -2991.5906    
+      5400   233.38216     -24856.494      0             -24593.076     -2988.9619    
+      5452   234.00516     -24855.704      0             -24591.583     -3156.6825    
+Loop time of 0.231426 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 37.334 ns/day, 0.643 hours/ns, 432.103 timesteps/s, 3.885 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 3.6291e-05 | 0.091941   | 0.18716    |  30.3 | 39.73
+Neigh   | 0.00052309 | 0.014914   | 0.029535   |  11.7 |  6.44
+Comm    | 0.007016   | 0.042785   | 0.081221   |  16.1 | 18.49
+Output  | 5.9722e-05 | 7.4868e-05 | 0.0001545  |   0.0 |  0.03
+Modify  | 0.006848   | 0.080294   | 0.16899    |  26.0 | 34.70
+Other   |            | 0.001418   |            |       |  0.61
+
+Nlocal:           1124 ave        2251 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        921.375 ave        1846 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 3.4+${fincr}
+variable f equal 3.4+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0086089784044968
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      5452   234.00516     -24855.704      0             -24591.583     -3099.5823    
+      5500   230.10702     -24852.782      0             -24593.061     -3121.6969    
+      5552   232.15115     -24855.089      0             -24593.06      -3106.473     
+Loop time of 0.248254 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.803 ns/day, 0.690 hours/ns, 402.814 timesteps/s, 3.622 Matom-step/s
+99.8% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.9914e-05 | 0.095468   | 0.19518    |  30.9 | 38.46
+Neigh   | 0.00053677 | 0.015202   | 0.030224   |  11.9 |  6.12
+Comm    | 0.00078427 | 0.0098608  | 0.025949   |   9.6 |  3.97
+Output  | 6.6515e-05 | 8.242e-05  | 0.0001694  |   0.0 |  0.03
+Modify  | 0.0072392  | 0.12613    | 0.24503    |  33.5 | 50.81
+Other   |            | 0.001508   |            |       |  0.61
+
+Nlocal:           1124 ave        2251 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        923.375 ave        1850 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 3.6+${fincr}
+variable f equal 3.6+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0090872549825244
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      5552   232.15115     -24855.089      0             -24593.06      -3051.0799    
+      5600   228.92347     -24852.298      0             -24593.912     -3083.2341    
+      5652   234.13605     -24857.07       0             -24592.801     -2711.949     
+Loop time of 0.234451 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.852 ns/day, 0.651 hours/ns, 426.528 timesteps/s, 3.835 Matom-step/s
+99.5% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.8342e-05 | 0.093493   | 0.19092    |  30.6 | 39.88
+Neigh   | 0.00039349 | 0.013712   | 0.027186   |  11.3 |  5.85
+Comm    | 0.00069928 | 0.0063372  | 0.01621    |   7.6 |  2.70
+Output  | 6.5753e-05 | 7.9965e-05 | 0.00015731 |   0.0 |  0.03
+Modify  | 0.007212   | 0.11935    | 0.23151    |  32.5 | 50.91
+Other   |            | 0.001477   |            |       |  0.63
+
+Nlocal:           1124 ave        2262 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        923.125 ave        1854 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 3.8+${fincr}
+variable f equal 3.8+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.009565531560552
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      5652   234.13605     -24857.07       0             -24592.801     -2761.8318    
+      5700   232.97358     -24856.041      0             -24593.083     -3190.7108    
+      5752   233.97816     -24857.416      0             -24593.325     -2858.7754    
+Loop time of 0.230822 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 37.431 ns/day, 0.641 hours/ns, 433.235 timesteps/s, 3.896 Matom-step/s
+99.9% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.7389e-05 | 0.092829   | 0.18954    |  30.5 | 40.22
+Neigh   | 0.00045693 | 0.013635   | 0.027052   |  11.2 |  5.91
+Comm    | 0.0006848  | 0.0054327  | 0.013248   |   6.9 |  2.35
+Output  | 6.5033e-05 | 7.9846e-05 | 0.00016148 |   0.0 |  0.03
+Modify  | 0.0069702  | 0.11741    | 0.22788    |  32.2 | 50.87
+Other   |            | 0.001431   |            |       |  0.62
+
+Nlocal:           1124 ave        2256 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:            923 ave        1858 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 4+${fincr}
+variable f equal 4+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0100438081385796
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      5752   233.97816     -24857.416      0             -24593.325     -2958.6896    
+      5800   232.01007     -24855.926      0             -24594.056     -2837.3698    
+      5852   236.66257     -24861.761      0             -24594.64      -2671.9401    
+Loop time of 0.232273 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 37.198 ns/day, 0.645 hours/ns, 430.527 timesteps/s, 3.871 Matom-step/s
+99.0% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.0382e-05 | 0.093693   | 0.19063    |  30.6 | 40.34
+Neigh   | 0.00049984 | 0.013682   | 0.026952   |  11.3 |  5.89
+Comm    | 0.0007129  | 0.0052793  | 0.013341   |   6.8 |  2.27
+Output  | 6.5924e-05 | 8.1222e-05 | 0.0001607  |   0.0 |  0.03
+Modify  | 0.006931   | 0.1181     | 0.22926    |  32.3 | 50.84
+Other   |            | 0.001441   |            |       |  0.62
+
+Nlocal:           1124 ave        2258 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         920.75 ave        1857 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 4.2+${fincr}
+variable f equal 4.2+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0105220847166072
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      5852   236.66257     -24861.761      0             -24594.64      -2770.6651    
+      5900   235.90912     -24861.277      0             -24595.007     -3298.308     
+      5952   238.85385     -24862.907      0             -24593.313     -3015.4584    
+Loop time of 0.262678 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 32.892 ns/day, 0.730 hours/ns, 380.694 timesteps/s, 3.423 Matom-step/s
+99.3% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00012104 | 0.10506    | 0.2138     |  32.4 | 40.00
+Neigh   | 0.00058996 | 0.014797   | 0.029496   |  11.6 |  5.63
+Comm    | 0.00079998 | 0.0073806  | 0.01837    |   8.1 |  2.81
+Output  | 7.1524e-05 | 8.7236e-05 | 0.00017677 |   0.0 |  0.03
+Modify  | 0.0082018  | 0.1336     | 0.25904    |  34.3 | 50.86
+Other   |            | 0.001754   |            |       |  0.67
+
+Nlocal:           1124 ave        2254 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        921.125 ave        1851 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 4.4+${fincr}
+variable f equal 4.4+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0110003612946348
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      5952   238.85385     -24862.907      0             -24593.313     -2898.7001    
+      6000   240.58472     -24865.356      0             -24593.808     -2914.8751    
+      6052   242.01225     -24866.401      0             -24593.242     -2924.0361    
+Loop time of 0.234675 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 36.817 ns/day, 0.652 hours/ns, 426.122 timesteps/s, 3.832 Matom-step/s
+99.8% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.7403e-05 | 0.09431    | 0.19147    |  30.7 | 40.19
+Neigh   | 0.00051631 | 0.013819   | 0.027238   |  11.2 |  5.89
+Comm    | 0.00078689 | 0.0054578  | 0.013648   |   6.7 |  2.33
+Output  | 9.9708e-05 | 0.00012588 | 0.00027737 |   0.0 |  0.05
+Modify  | 0.0075144  | 0.11936    | 0.2313     |  32.4 | 50.86
+Other   |            | 0.001601   |            |       |  0.68
+
+Nlocal:           1124 ave        2266 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        922.375 ave        1854 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 4.6+${fincr}
+variable f equal 4.6+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0114786378726624
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      6052   242.01225     -24866.401      0             -24593.242     -2899.5899    
+      6100   242.9937      -24869.498      0             -24595.231     -2773.4835    
+      6152   244.57024     -24873.188      0             -24597.141     -2931.5383    
+Loop time of 0.247675 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.884 ns/day, 0.688 hours/ns, 403.754 timesteps/s, 3.631 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 8.3382e-05 | 0.095931   | 0.19995    |  31.0 | 38.73
+Neigh   | 0.00089631 | 0.015808   | 0.031105   |  11.8 |  6.38
+Comm    | 0.00087132 | 0.0083363  | 0.021368   |   9.1 |  3.37
+Output  | 7.467e-05  | 9.3516e-05 | 0.00019344 |   0.0 |  0.04
+Modify  | 0.0078554  | 0.12575    | 0.24372    |  33.2 | 50.77
+Other   |            | 0.001753   |            |       |  0.71
+
+Nlocal:           1124 ave        2263 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        922.625 ave        1856 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 4.8+${fincr}
+variable f equal 4.8+0.2
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.01195691445069
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      6152   244.57024     -24873.188      0             -24597.141     -2851.1221    
+      6200   243.5513      -24872.195      0             -24597.299     -2799.784     
+      6252   247.69169     -24876.14       0             -24596.571     -2609.8769    
+Loop time of 0.241423 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 35.788 ns/day, 0.671 hours/ns, 414.211 timesteps/s, 3.725 Matom-step/s
+99.6% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.7015e-05 | 0.094297   | 0.19411    |  30.7 | 39.06
+Neigh   | 0.00048728 | 0.016121   | 0.031954   |  12.2 |  6.68
+Comm    | 0.00080857 | 0.006784   | 0.018717   |   8.1 |  2.81
+Output  | 6.5423e-05 | 8.1577e-05 | 0.00017063 |   0.0 |  0.03
+Modify  | 0.0071591  | 0.12265    | 0.23823    |  33.0 | 50.80
+Other   |            | 0.001489   |            |       |  0.62
+
+Nlocal:           1124 ave        2268 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         922.25 ave        1856 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+##########################################################
+#---------------------Equilibration----------------------#
+##########################################################
+
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.01195691445069
+variable        dispz equal xcm(tip_fix,z)
+
+run 100 pre yes post no
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      6252   247.69169     -24876.14       0             -24596.571     -2589.0145    
+      6300   249.50594     -24877.684      0             -24596.067     -2726.2021    
+      6352   251.9008      -24880.233      0             -24595.913     -2204.6498    
+Loop time of 0.243994 on 8 procs for 100 steps with 8992 atoms
+
+
+# Prepare to loop for displacement checks
+
+label check_r
+
+variable disp_l equal ${dispz}
+variable disp_l equal 33.0893891776412
+variable disp_h equal ${dispz}
+variable disp_h equal 33.0893891776412
+
+variable disploop loop 50
+label disp
+
+# run 100 pre no post no
+
+# if '${dispz}>${disp_h}' then 'variable disp_h equal ${dispz}'
+# if '${dispz}<${disp_l}' then 'variable disp_l equal ${dispz}'
+
+# next disploop
+# jump SELF disp
+
+# variable r equal ${disp_h}-${disp_l}
+
+# # Check if r is less than 0.1
+
+# if '${r} < 20' then 'jump SELF loop_end' else 'jump SELF check_r'
+
+run 1000
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      6352   251.9008      -24880.233      0             -24595.913     -2345.4967    
+      6400   253.13118     -24882.084      0             -24596.375     -2154.4726    
+      6500   255.91711     -24887.567      0             -24598.713     -2331.5483    
+      6600   256.18415     -24885.732      0             -24596.577     -1989.338     
+      6700   260.46442     -24889.265      0             -24595.279     -2149.6333    
+      6800   260.4778      -24887.513      0             -24593.511     -1787.5242    
+      6900   261.12535     -24886.615      0             -24591.883     -1904.8145    
+      7000   260.87767     -24885.671      0             -24591.219     -1668.158     
+      7100   256.08373     -24880.284      0             -24591.243     -1877.9292    
+      7200   251.64904     -24875.255      0             -24591.219     -1836.2218    
+      7300   242.80322     -24863.435      0             -24589.383     -2396.8745    
+      7352   243.31114     -24864.062      0             -24589.437     -2110.8258    
+Loop time of 2.42749 on 8 procs for 1000 steps with 8992 atoms
+
+Performance: 35.592 ns/day, 0.674 hours/ns, 411.948 timesteps/s, 3.704 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00041451 | 0.95413    | 1.949      |  97.7 | 39.31
+Neigh   | 0.004396   | 0.16656    | 0.33052    |  39.6 |  6.86
+Comm    | 0.0080388  | 0.058664   | 0.16449    |  23.4 |  2.42
+Output  | 0.00037169 | 0.00045265 | 0.00089194 |   0.0 |  0.02
+Modify  | 0.069935   | 1.2338     | 2.3977     | 104.7 | 50.83
+Other   |            | 0.01385    |            |       |  0.57
+
+Nlocal:           1124 ave        2257 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         920.25 ave        1852 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 107
+Dangerous builds = 0
+
+# End of the loop
+
+label loop_end
+
+write_data scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_1/data/load_$(v_find)N.data
+write_data scripts/afm2/h-MoS2/size_100x_100y/sub_aSi/tip_Si_r25/K300/l_1/data/load_5N.data
+System init for write_data ...
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+next find
+jump SELF force_loop
+#----------------- Set up initial parameters -------------
+
+variable        num_floads equal 10
+variable        r equal 0.0
+variable        fincr equal (${find}-${f})/${num_floads}
+variable        fincr equal (8-${f})/${num_floads}
+variable        fincr equal (8-5)/${num_floads}
+variable        fincr equal (8-5)/10
+thermo_modify   lost ignore flush yes
+
+#----------------- Apply pressure to the tip -------------
+
+variable i loop ${num_floads}
+variable i loop 10
+label loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 5+${fincr}
+variable f equal 5+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0126743293177314
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      7352   243.31114     -24864.062      0             -24589.437     -2236.0386    
+      7400   239.63918     -24859.366      0             -24588.885     -2449.0548    
+      7452   241.07407     -24859.083      0             -24586.983     -2042.6555    
+Loop time of 0.251477 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.357 ns/day, 0.699 hours/ns, 397.650 timesteps/s, 3.576 Matom-step/s
+99.5% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 7.3238e-05 | 0.097753   | 0.2042     |  31.3 | 38.87
+Neigh   | 0.0004629  | 0.016134   | 0.032098   |  12.3 |  6.42
+Comm    | 0.00078108 | 0.0082929  | 0.022623   |   9.4 |  3.30
+Output  | 6.6585e-05 | 8.0793e-05 | 0.00015738 |   0.0 |  0.03
+Modify  | 0.0071941  | 0.12774    | 0.24835    |  33.7 | 50.80
+Other   |            | 0.001474   |            |       |  0.59
+
+Nlocal:           1124 ave        2259 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        918.875 ave        1844 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 5.3+${fincr}
+variable f equal 5.3+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0133917441847728
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      7452   241.07407     -24859.083      0             -24586.983     -2147.3548    
+      7500   236.29208     -24853.75       0             -24587.047     -2357.0359    
+      7552   237.25858     -24853.436      0             -24585.642     -2547.2404    
+Loop time of 0.258809 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 33.384 ns/day, 0.719 hours/ns, 386.385 timesteps/s, 3.474 Matom-step/s
+99.8% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 6.909e-05  | 0.0994     | 0.20576    |  31.5 | 38.41
+Neigh   | 0.00058543 | 0.017564   | 0.034783   |  12.8 |  6.79
+Comm    | 0.0008847  | 0.0088392  | 0.020371   |   9.0 |  3.42
+Output  | 6.6846e-05 | 8.2958e-05 | 0.00017222 |   0.0 |  0.03
+Modify  | 0.007384   | 0.13137    | 0.25542    |  34.2 | 50.76
+Other   |            | 0.001549   |            |       |  0.60
+
+Nlocal:           1124 ave        2265 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        916.125 ave        1845 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 11
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 5.6+${fincr}
+variable f equal 5.6+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0141091590518142
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      7552   237.25858     -24853.436      0             -24585.642     -2459.1948    
+      7600   235.16855     -24852.456      0             -24587.021     -2304.3229    
+      7652   232.77174     -24848.89       0             -24586.16      -2073.9394    
+Loop time of 0.248905 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.712 ns/day, 0.691 hours/ns, 401.759 timesteps/s, 3.613 Matom-step/s
+99.2% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 6.2001e-05 | 0.097091   | 0.20075    |  31.2 | 39.01
+Neigh   | 0.00051168 | 0.015858   | 0.031432   |  12.1 |  6.37
+Comm    | 0.00077207 | 0.0076273  | 0.021843   |   8.8 |  3.06
+Output  | 6.5874e-05 | 8.3079e-05 | 0.00017546 |   0.0 |  0.03
+Modify  | 0.007701   | 0.12663    | 0.24558    |  33.4 | 50.87
+Other   |            | 0.001617   |            |       |  0.65
+
+Nlocal:           1124 ave        2258 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        914.625 ave        1839 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 5.9+${fincr}
+variable f equal 5.9+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0148265739188556
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      7652   232.77174     -24848.89       0             -24586.16      -2224.855     
+      7700   238.68301     -24856.265      0             -24586.864     -2072.2763    
+      7752   234.56824     -24851.933      0             -24587.176     -2501.2848    
+Loop time of 0.246886 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.996 ns/day, 0.686 hours/ns, 405.045 timesteps/s, 3.642 Matom-step/s
+99.9% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.3039e-05 | 0.09816    | 0.20162    |  31.3 | 39.76
+Neigh   | 0.00046502 | 0.015639   | 0.030941   |  12.1 |  6.33
+Comm    | 0.00072679 | 0.0060903  | 0.014437   |   7.5 |  2.47
+Output  | 6.913e-05  | 8.5598e-05 | 0.00017156 |   0.0 |  0.03
+Modify  | 0.0071002  | 0.12539    | 0.24374    |  33.4 | 50.79
+Other   |            | 0.001524   |            |       |  0.62
+
+Nlocal:           1124 ave        2256 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:          916.5 ave        1838 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 6.2+${fincr}
+variable f equal 6.2+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.015543988785897
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      7752   234.56824     -24851.933      0             -24587.176     -2481.1491    
+      7800   236.23879     -24854.042      0             -24587.399     -2650.5057    
+      7852   238.11458     -24857.137      0             -24588.377     -2467.8614    
+Loop time of 0.241766 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 35.737 ns/day, 0.672 hours/ns, 413.623 timesteps/s, 3.719 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 4.3391e-05 | 0.095621   | 0.19715    |  30.9 | 39.55
+Neigh   | 0.00047674 | 0.015248   | 0.03006    |  11.8 |  6.31
+Comm    | 0.00072519 | 0.0065563  | 0.018893   |   8.2 |  2.71
+Output  | 7.4891e-05 | 9.3421e-05 | 0.00018732 |   0.0 |  0.04
+Modify  | 0.0070002  | 0.12282    | 0.23872    |  33.0 | 50.80
+Other   |            | 0.001433   |            |       |  0.59
+
+Nlocal:           1124 ave        2253 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         917.75 ave        1844 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 6.5+${fincr}
+variable f equal 6.5+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0162614036529384
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      7852   238.11458     -24857.137      0             -24588.377     -2544.0967    
+      7900   237.60037     -24858.588      0             -24590.408     -2514.5761    
+      7952   239.11226     -24859.819      0             -24589.933     -2768.1352    
+Loop time of 0.247971 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.843 ns/day, 0.689 hours/ns, 403.273 timesteps/s, 3.626 Matom-step/s
+99.9% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 5.4408e-05 | 0.098037   | 0.20318    |  31.3 | 39.54
+Neigh   | 0.00057678 | 0.014317   | 0.028535   |  11.4 |  5.77
+Comm    | 0.00068844 | 0.0079956  | 0.020309   |   9.0 |  3.22
+Output  | 6.7908e-05 | 8.4739e-05 | 0.00017075 |   0.0 |  0.03
+Modify  | 0.0073017  | 0.12601    | 0.24477    |  33.4 | 50.82
+Other   |            | 0.001525   |            |       |  0.62
+
+Nlocal:           1124 ave        2258 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:         918.75 ave        1846 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 9
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 6.8+${fincr}
+variable f equal 6.8+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0169788185199798
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      7952   239.11226     -24859.819      0             -24589.933     -2718.564     
+      8000   237.31824     -24857.377      0             -24589.516     -2848.1934    
+      8052   241.94217     -24863.16       0             -24590.08      -2596.6095    
+Loop time of 0.252061 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 34.277 ns/day, 0.700 hours/ns, 396.729 timesteps/s, 3.567 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 7.363e-05  | 0.098931   | 0.20212    |  31.4 | 39.25
+Neigh   | 0.00073198 | 0.01626    | 0.032225   |  12.1 |  6.45
+Comm    | 0.00093732 | 0.0073013  | 0.017186   |   7.9 |  2.90
+Output  | 6.5593e-05 | 8.2212e-05 | 0.00017398 |   0.0 |  0.03
+Modify  | 0.0074664  | 0.12781    | 0.24826    |  33.7 | 50.71
+Other   |            | 0.001674   |            |       |  0.66
+
+Nlocal:           1124 ave        2257 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        920.125 ave        1848 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 7.1+${fincr}
+variable f equal 7.1+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0176962333870212
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      8052   241.94217     -24863.16       0             -24590.08      -2661.1816    
+      8100   238.8237      -24859.891      0             -24590.33      -2050.9211    
+      8152   240.62759     -24861.214      0             -24589.617     -2425.3283    
+Loop time of 0.275934 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 31.312 ns/day, 0.766 hours/ns, 362.405 timesteps/s, 3.259 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 8.6707e-05 | 0.10001    | 0.20492    |  31.6 | 36.25
+Neigh   | 0.00095442 | 0.021867   | 0.043543   |  14.1 |  7.92
+Comm    | 0.0010931  | 0.012233   | 0.028179   |  10.4 |  4.43
+Output  | 6.5062e-05 | 8.0339e-05 | 0.00016275 |   0.0 |  0.03
+Modify  | 0.0081722  | 0.13998    | 0.27171    |  35.2 | 50.73
+Other   |            | 0.001755   |            |       |  0.64
+
+Nlocal:           1124 ave        2249 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        919.375 ave        1840 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 13
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 7.4+${fincr}
+variable f equal 7.4+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.0184136482540626
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      8152   240.62759     -24861.214      0             -24589.617     -2554.942     
+      8200   239.96781     -24863.079      0             -24592.227     -2837.6139    
+      8252   240.20858     -24865.388      0             -24594.265     -2895.68      
+Loop time of 0.261731 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 33.011 ns/day, 0.727 hours/ns, 382.071 timesteps/s, 3.436 Matom-step/s
+99.8% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00011054 | 0.09957    | 0.20697    |  31.5 | 38.04
+Neigh   | 0.0012437  | 0.017159   | 0.033374   |  12.0 |  6.56
+Comm    | 0.0010091  | 0.010526   | 0.025928   |   9.9 |  4.02
+Output  | 7.8328e-05 | 9.4821e-05 | 0.00019161 |   0.0 |  0.04
+Modify  | 0.0081957  | 0.13263    | 0.25725    |  34.2 | 50.67
+Other   |            | 0.00175    |            |       |  0.67
+
+Nlocal:           1124 ave        2252 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:            918 ave        1838 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+variable f equal ${f}+${fincr}
+variable f equal 7.7+${fincr}
+variable f equal 7.7+0.3
+
+# Set force variable
+
+variable Fatom equal -v_f/(count(tip_fix)*1.602176565)
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.019131063121104
+run 100
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      8252   240.20858     -24865.388      0             -24594.265     -2897.3591    
+      8300   237.36237     -24862.755      0             -24594.845     -2166.4657    
+      8352   239.63016     -24867.006      0             -24596.536     -2756.2474    
+Loop time of 0.275817 on 8 procs for 100 steps with 8992 atoms
+
+Performance: 31.325 ns/day, 0.766 hours/ns, 362.559 timesteps/s, 3.260 Matom-step/s
+99.7% CPU use with 8 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 7.6131e-05 | 0.10182    | 0.21534    |  31.9 | 36.92
+Neigh   | 0.00078936 | 0.017178   | 0.033993   |  12.4 |  6.23
+Comm    | 0.0010002  | 0.014881   | 0.036303   |  12.2 |  5.40
+Output  | 6.9721e-05 | 8.4281e-05 | 0.00016712 |   0.0 |  0.03
+Modify  | 0.0083664  | 0.13999    | 0.27172    |  35.2 | 50.75
+Other   |            | 0.001863   |            |       |  0.68
+
+Nlocal:           1124 ave        2251 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Nghost:        918.625 ave        1845 max           0 min
+Histogram: 4 0 0 0 0 0 0 0 0 4
+Neighs:              0 ave           0 max           0 min
+Histogram: 8 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 0
+Ave neighs/atom = 0
+Neighbor list builds = 10
+Dangerous builds = 0
+
+unfix forcetip
+
+next i
+jump SELF loop_load
+
+##########################################################
+#---------------------Equilibration----------------------#
+##########################################################
+
+fix forcetip tip_fix aveforce 0.0 0.0 ${Fatom}
+fix forcetip tip_fix aveforce 0.0 0.0 -0.019131063121104
+variable        dispz equal xcm(tip_fix,z)
+
+run 100 pre yes post no
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      8352   239.63016     -24867.006      0             -24596.536     -2870.9599    
+      8400   240.18049     -24869.608      0             -24598.516     -2949.036     
+      8452   240.57372     -24872.185      0             -24600.65      -3185.3018    
+Loop time of 0.265664 on 8 procs for 100 steps with 8992 atoms
+
+
+# Prepare to loop for displacement checks
+
+label check_r
+
+variable disp_l equal ${dispz}
+variable disp_l equal 28.1283965953277
+variable disp_h equal ${dispz}
+variable disp_h equal 28.1283965953277
+
+variable disploop loop 50
+label disp
+
+# run 100 pre no post no
+
+# if '${dispz}>${disp_h}' then 'variable disp_h equal ${dispz}'
+# if '${dispz}<${disp_l}' then 'variable disp_l equal ${dispz}'
+
+# next disploop
+# jump SELF disp
+
+# variable r equal ${disp_h}-${disp_l}
+
+# # Check if r is less than 0.1
+
+# if '${r} < 20' then 'jump SELF loop_end' else 'jump SELF check_r'
+
+run 1000
+WARNING: One or more atoms are time integrated more than once (src/modify.cpp:296)
+Per MPI rank memory allocation (min/avg/max) = 8.773 | 8.831 | 8.888 Mbytes
+   Step          Temp          E_pair         E_mol          TotEng         Press     
+      8452   240.57372     -24872.185      0             -24600.65      -3001.7929    
+      8500   237.7073      -24870.604      0             -24602.303     -3039.9115    
+      8600   237.52438     -24871.319      0             -24603.226     -2852.9873    
+      8700   236.49264     -24870.831      0             -24603.902     -2769.0074    
+      8800   239.71966     -24877.133      0             -24606.561     -2476.5271    
+      8900   238.88036     -24879.531      0             -24609.907     -2554.0371    
+      9000   236.32385     -24878.386      0             -24611.648     -2531.9595    
+      9100   234.49919     -24879.925      0             -24615.245     -2355.7835    
+      9200   236.30723     -24883.336      0             -24616.616     -2667.8961    
+      9300   233.96706     -24883.054      0             -24618.976     -2400.3914    

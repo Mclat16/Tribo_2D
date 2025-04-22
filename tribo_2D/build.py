@@ -279,7 +279,7 @@ def sheet(var):
                         break        
             atomsk_command = f"echo n | atomsk {filename} -duplicate {a} {b} 1 -ow lmp -v 0"
             subprocess.run(atomsk_command, shell=True, check=True)
-            process_h(filename)
+            process_h(var['pot']['2D'],filename)
 
     dim = get_model_dimensions(filename)
     duplicate_a = round(x / dim['xhi'])

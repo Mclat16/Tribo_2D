@@ -293,7 +293,7 @@ def num_atoms_lmp(filename):
         file.writelines(lines)
     
 
-def process_h(filename):
+def process_h(pot,filename):
     with open(filename, 'r') as f:
         lines = f.readlines()
 
@@ -352,13 +352,9 @@ def process_h(filename):
                     pre_elem[t] = atom_types[i]
                     t+= len(atom_types)
 
-    modified_lines = set() 
-
     a = 1
-    unique = list(set(val[0] for val in atom_types.values()))
-
     atom_lines = {}
-    for i in unique:
+    for i in pot:
 
         atoms_section = False
         for l in range(1,len(mod_lines)+1):

@@ -175,7 +175,7 @@ class afm:
                 "# End of the loop\n\n",
                 "label loop_end\n\n",
                 f"write_data {self.directory[layer]}/data/load_$(v_find)N.data\n",
-                "next ${find}"
+                "next find\n",
                 "jump SELF force_loop"
                 ])
 
