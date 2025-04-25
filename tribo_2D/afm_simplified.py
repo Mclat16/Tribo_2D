@@ -30,7 +30,7 @@ class afm:
                     'natype':sum(var['pot'][mat].values())*3
                 })
         # Build one layer of 2D material to generate important variables
-        var['dir'] = f"scripts/afm2/{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}/tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
+        var['dir'] = f"{var['2D']['mat']}/afm/{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}_tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
 
         # Create file locations
 
@@ -75,11 +75,9 @@ class afm:
         for layer in self.var['2D']['layers']:
 
             [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['2D']['lat_c']*(layer-1)/2]# Tip placement
-            h_2D        = 10 + 4.5
+            h_2D        = 15
 
             filename = f"{self.directory[layer]}/lammps/system.lmp"
-            # with open(f"scripts/afm2/scripts/list_system_{layer}", 'a') as f:
-            #     f.write(f"{filename}\n")
 
             with open(filename, 'w') as f:
                 init(f)
@@ -136,8 +134,7 @@ class afm:
                 "label force_loop\n",
 
                 "#----------------- Set up initial parameters -------------\n\n",
-                # f"                variable find equal {self.var['general']['find']}\n",
-                "variable        num_floads equal 500\n",
+                "variable        num_floads equal 100\n",
                 "variable        r equal 0.0\n",
                 "variable        fincr equal (${find}-${f})/${num_floads}\n",
                 "thermo_modify   lost ignore flush yes\n\n",
@@ -187,101 +184,103 @@ class afm:
         tipps = self.var['tip']['s']/100 # in A/ps
 
         for layer in self.var['2D']['layers']:
-            for force in self.var['general']['force']:
+
+            filename = f"{self.directory[layer]}/lammps/slide_{self.var['tip']['s'] }ms.lmp"
+            with open(filename, 'w') as f:
+                init(f)
+                f.writelines([
+                f"dump            sys all atom 20000 ./{self.var['dir']}/visuals/slide_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n"
+
+                f"variable find index {' '.join(str(x) for x in self.var['general']['force'])}\n",
+                "label force_loop\n",
                 
-                if force == self.var['general']['scan_angle'][3]:
-                    dump = False
-                    scan_angle = self.scan_angle
-                else:
-                    dump = False
-                    scan_angle = [0]
-                    if force in self.dump_load:
-                        dump = True
-                    
-                for a in scan_angle:
-                    if a in self.dump_slide:
-                        dump = True
-                        
-                    spring_x = np.cos(np.deg2rad(a))
-                    spring_y = np.sin((a))
-                    filename = f"{self.directory[layer]}/lammps/slide_{force}N_{self.var['tip']['s'] }ms_{a}deg.lmp"
-                    with open(self.scripts + "/list_slide", 'a') as f:
-                        f.write(f"{filename}\n")
-                    with open(filename, 'w') as f:
-                        init(f)
-                        f.writelines([
-                        f"read_data       {self.directory[layer]}/data/load_{force}N.data # Read system data\n\n",
-                        f"include         {self.directory[layer]}/lammps/system.in.settings\n\n",
-                        "#----------------- Create visualisation files ------------\n\n",
-                        ])
+                f"variable a index 0 {' '.join(str(x) for x in self.scan_angle)} 0\n",
+                "label angle_loop\n",
+                ])
+                init(f)
+                f.writelines([
+                f"read_data       {self.directory[layer]}/data/load_$(v_find)N.data # Read system data\n\n",
+                f"include         {self.directory[layer]}/lammps/system.in.settings\n\n",
 
-                        if dump == True:
-                            f.write(f"dump            sys all atom 1000 ./{self.var['dir']}/visuals/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n")
-                        
-                        f.writelines([
-                        
-                        "##########################################################\n",
-                        "#--------------------Tip Indentation---------------------#\n",
-                        "##########################################################\n",
-                        "#----------------- Apply constraints ---------------------\n\n",
+                "#----------------- Create visualisation files ------------\n\n",
+                
+                "##########################################################\n",
+                "#--------------------Tip Indentation---------------------#\n",
+                "##########################################################\n",
+                "#----------------- Apply constraints ---------------------\n\n",
 
-                        "fix             sub_fix sub_fix setforce 0.0 0.0 0.0 \n",
-                        "fix             tip_f tip_fix rigid/nve single force * on on on torque * off off off\n\n",
+                "fix             sub_fix sub_fix setforce 0.0 0.0 0.0 \n",
+                "fix             tip_f tip_fix rigid/nve single force * on on on torque * off off off\n\n",
 
-                        "#----------------- Apply Langevin thermostat -------------\n\n",
-                        "compute         temp_tip tip_thermo temp/partial 0 1 0\n",
-                        f"fix             lang_tip tip_thermo langevin {self.var['general']['temproom']} {self.var['general']['temproom']} $(100.0*dt) 699483 zero yes\n",
-                        "fix_modify      lang_tip temp temp_tip\n\n",
-                        "compute         temp_base sub_thermo temp/partial 0 1 0\n",
-                        f"fix             lang_bot sub_thermo langevin {self.var['general']['temproom']} {self.var['general']['temproom']} $(100.0*dt) 2847563 zero yes\n",
-                        "fix_modify      lang_bot temp temp_base\n\n",
-                        "fix             nve_all all nve\n",
+                "#----------------- Apply Langevin thermostat -------------\n\n",
+                "compute         temp_tip tip_thermo temp/partial 0 1 0\n",
+                f"fix             lang_tip tip_thermo langevin {self.var['general']['temproom']} {self.var['general']['temproom']} $(100.0*dt) 699483 zero yes\n",
+                "fix_modify      lang_tip temp temp_tip\n\n",
+                "compute         temp_base sub_thermo temp/partial 0 1 0\n",
+                f"fix             lang_bot sub_thermo langevin {self.var['general']['temproom']} {self.var['general']['temproom']} $(100.0*dt) 2847563 zero yes\n",
+                "fix_modify      lang_bot temp temp_base\n\n",
+                "fix             nve_all all nve\n",
 
-                        "timestep        0.001\n",
-                        "thermo          100\n\n",
+                "timestep        0.001\n",
+                "thermo          100\n\n",
 
-                        "#----------------- Apply pressure to the tip -------------\n\n",
-                        f"variable        Ftotal          equal -{force}/1.602176565\n",
-                        "variable        Fatom           equal v_Ftotal/count(tip_fix)\n",
-                        "fix             forcetip tip_fix aveforce 0.0 0.0 ${Fatom}\n\n",
+                "#----------------- Apply pressure to the tip -------------\n\n",
+                f"variable        Ftotal          equal -v_find/1.602176565\n",
+                "variable        Fatom           equal v_Ftotal/count(tip_fix)\n",
+                "fix             forcetip tip_fix aveforce 0.0 0.0 ${Fatom}\n\n",
 
-                        "##########################################################\n",
-                        "#------------------------Compute-------------------------#\n",
-                        "##########################################################\n\n",
-			f"compute COM_top layer_{layer} com\n",
-                        "variable comx equal c_COM_top[1] \n",
-                        "variable comy equal c_COM_top[2] \n",
-                        "variable comz equal c_COM_top[3] \n\n",
+                "##########################################################\n",
+                "#------------------------Compute-------------------------#\n",
+                "##########################################################\n\n",
+			    
+                f"compute COM_top layer_{layer} com\n",
+                "variable comx equal c_COM_top[1] \n",
+                "variable comy equal c_COM_top[2] \n",
+                "variable comz equal c_COM_top[3] \n\n",
 
-                        f"compute COM_tip tip_fix com\n",
-                        "variable comx_tip equal c_COM_tip[1] \n",
-                        "variable comy_tip equal c_COM_tip[2] \n",
-                        "variable comz_tip equal c_COM_tip[3] \n\n",
-                        "#----------------- Calculate total friction --------------\n\n",
-                        "variable        fz_tip   equal  f_forcetip[3]*1.602176565\n\n",
-                        "variable        fx_spr   equal  f_spr[1]*1.602176565\n\n",
-                        "variable        fy_spr   equal f_spr[2]*1.602176565\n\n",
-                        f"fix             fc_ave all ave/time 1 1000 1000 v_fz_tip v_fx_spr v_fy_spr v_comx v_comy v_comz v_comx_tip v_comy_tip v_comz_tip file ./{self.var['dir']}/results/fc_ave_slide_{force}nN_{a}angle_{self.var['tip']['s']}ms_l{layer}\n\n",
-                        
-                        "##########################################################\n",
-                        "#---------------------Spring Loading---------------------#\n",
-                        "##########################################################\n\n",
-                        "#----------------- Add damping force ---------------------\n\n",
-                        f"fix             damp tip_fix viscous {DspringeV}\n\n",
+                f"compute COM_tip tip_fix com\n",
+                "variable comx_tip equal c_COM_tip[1] \n",
+                "variable comy_tip equal c_COM_tip[2] \n",
+                "variable comz_tip equal c_COM_tip[3] \n\n",
+                "#----------------- Calculate total friction --------------\n\n",
+                "variable        fz_tip   equal  f_forcetip[3]*1.602176565\n\n",
+                "variable        fx_spr   equal  f_spr[1]*1.602176565\n\n",
+                "variable        fy_spr   equal f_spr[2]*1.602176565\n\n",
+                f"fix             fc_ave all ave/time 1 1000 1000 v_fz_tip v_fx_spr v_fy_spr v_comx v_comy v_comz v_comx_tip v_comy_tip v_comz_tip file ./{self.var['dir']}/results/fc_ave_slide_$(v_find)nN_$(v_a)angle_{self.var['tip']['s']}ms_l{layer}\n\n",
+                
+                "##########################################################\n",
+                "#---------------------Spring Loading---------------------#\n",
+                "##########################################################\n\n",
+                "#----------------- Add damping force ---------------------\n\n",
+                f"fix             damp tip_fix viscous {DspringeV}\n\n",
 
-                        "#------------------Add lateral harmonic spring------------\n\n",
-                        f"fix             spr tip_fix smd cvel {springeV} {tipps} tether {spring_x} {spring_y} NULL 0.0\n\n",
-                        "run 80000\n\n",
+                "variable spring_x equal cos(v_a*PI/180)\n",
+                "variable spring_y equal sin(v_a*PI/180)\n\n",
+                "#------------------Add lateral harmonic spring------------\n\n",
+                f"fix             spr tip_fix smd cvel {springeV} {tipps} tether $(v_spring_x) $(v_spring_y) NULL 0.0\n\n",
+                "run 80000\n\n",
 
-                        "unfix spr\n\n",
-                        "variable        fx_spr   equal  0\n",
-                        "run 5000\n\n",
+                "unfix spr\n\n",
+                f"fix             spr tip_fix smd cvel {springeV} 0 tether 0.0 0.0 NULL 0.0\n\n",
+                "run 5000\n\n",
+                "unfix spr\n\n",
+                f"fix             spr tip_fix smd cvel  {springeV} {tipps} tether -$(v_spring_x) -$(v_spring_y) NULL 0.0\n\n",
+                "run 80000\n",
 
-                        f"fix             spr tip_fix smd cvel  {springeV} {tipps} tether -{spring_x} -{spring_y} NULL 0.0\n\n",
-                        "run 80000\n",
+                f"if '$(v_a) == {self.var['general']['scan_angle'][3]}' then &\n",
+                "'next a' & \n",
+                "'jump SELF find_incr'\n\n",
 
-                        f"write_data {self.directory[layer]}/data/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms.data"
-                        ])
+                f"if '$(v_find) == {self.var['general']['scan_angle'][3]}' then &\n",
+                "'next a' & \n",
+                "'clear' & \n",
+                "'jump SELF angle_loop'\n\n",
+
+                "label find_incr\n\n",
+                "next find\n",
+                "clear\n",
+                "jump SELF force_loop"
+                ])
     
     def pbs(self):
  

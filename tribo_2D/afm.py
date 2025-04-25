@@ -30,7 +30,7 @@ class afm:
                     'natype':sum(var['pot'][mat].values())*3
                 })
         # Build one layer of 2D material to generate important variables
-        var['dir'] = f"scripts/afm/{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}/tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
+        var['dir'] = f"{var['2D']['mat']}/size_{var['2D']['x']}x_{var['2D']['y']}y/sub_{var['sub']['amorph']}{var['sub']['mat']}/tip_{var['tip']['amorph']}{var['tip']['mat']}_r{var['tip']['r']}/K{var['general']['temproom']}"
 
         # Create file locations
 
@@ -80,7 +80,7 @@ class afm:
         for layer in self.var['2D']['layers']:
 
             [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['2D']['lat_c']*(layer-1)/2]# Tip placement
-            h_2D        = 10 + 4.5
+            h_2D        = 10 + 5
 
             filename = f"{self.directory[layer]}/lammps/system.lmp"
             with open(f"{self.scripts}/list_system", 'a') as f:
@@ -336,7 +336,7 @@ class afm:
                         "##########################################################\n",
                         "#------------------------Compute-------------------------#\n",
                         "##########################################################\n\n",
-			f"compute COM_top layer_{layer} com\n",
+			            f"compute COM_top layer_{layer} com\n",
                         "variable comx equal c_COM_top[1] \n",
                         "variable comy equal c_COM_top[2] \n",
                         "variable comz equal c_COM_top[3] \n\n",
@@ -358,6 +358,8 @@ class afm:
                         f"fix             damp tip_fix viscous {DspringeV}\n\n",
 
                         "#------------------Add lateral harmonic spring------------\n\n",
+
+                       
                         f"fix             spr tip_fix smd cvel {springeV} {tipps} tether {spring_x} {spring_y} NULL 0.0\n\n",
                         "run 80000\n\n",
 
