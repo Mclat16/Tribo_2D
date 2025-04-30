@@ -361,14 +361,7 @@ class afm:
 
                        
                         f"fix             spr tip_fix smd cvel {springeV} {tipps} tether {spring_x} {spring_y} NULL 0.0\n\n",
-                        "run 80000\n\n",
-
-                        "unfix spr\n\n",
-                        "variable        fx_spr   equal  0\n",
-                        "run 5000\n\n",
-
-                        f"fix             spr tip_fix smd cvel  {springeV} {tipps} tether -{spring_x} -{spring_y} NULL 0.0\n\n",
-                        "run 80000\n",
+                        "run 100000\n\n",
 
                         f"write_data {self.directory[layer]}/data/slide_{force}nN_{a}angle_{self.var['tip']['s']}ms.data"
                         ])
