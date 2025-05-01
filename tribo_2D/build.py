@@ -16,8 +16,7 @@ def tip_build(var):
     settings_sb(var,settings,'tip')
 
     x = 2*var['tip']['r']
-    y = x
-    z = round(var['tip']['r']/2)
+    z = var['tip']['r']
     side = round(2*var['tip']['r']/2.5)
     
     if var['tip']['amorph'] == 'a':
@@ -33,33 +32,39 @@ def tip_build(var):
             
         
         filename = am_filename
-        
-    else:
-        slab_generator('tip',var,200,200,50)
-        filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['tip']['mat']}.lmp")
+        dim_x = z
 
+    else:
+        slab_generator('tip',var,x,x,z)
+        filename = os.path.join(os.path.dirname(__file__), "materials", f"{var['tip']['mat']}.lmp")
+        dim = get_model_dimensions(filename)
+        dim_x = dim['xhi']/2
+        
+    h = dim_x/2.25
     lmp = lammps(cmdargs=["-log", "none", "-screen", "none",  "-nocite"])
     lmp.commands_list([
         "boundary p p p\n",
         "units metal\n",
         "atom_style      atomic\n",
-        f"region box block -{var['tip']['r']} {var['tip']['r']} -{var['tip']['r']} {var['tip']['r']} 0 {z}\n",
-        f"create_box      {var['data']['tip']['natype']} box\n",
-        f"read_data       {filename} add append shift -{var['tip']['r']} -{var['tip']['r']} -10\n",
+
+        f"region          afm_tip sphere 0 0 {dim_x} {dim_x}  side in units box\n",
+        f"create_box      3 afm_tip\n",
+        f"read_data       {filename} add append shift -{dim_x} -{dim_x} 0\n",
         f"include {settings}\n",
-        f"region          afm_tip sphere 0 0 {var['tip']['r']} {var['tip']['r']} side in units box\n",
+        f"region         box block -{dim_x} {dim_x} -{dim_x} {dim_x} -3 {h} units box\n",
+        # f"region         box block -{side} {side} -{side} {side} -3 {dim_x/2.5} units box\n",
         "region tip intersect 2 afm_tip box\n",
         "group           tip region tip\n",
         "group           box subtract all tip\n",
         "delete_atoms    group box\n",
-        f"change_box all x final -{side} {side} y final -{side} {side} z final -3 {z} \n",
+        f"change_box all x final -{dim_x} {dim_x} y final -{dim_x} {dim_x} z final -3 {h+1} \n",
         #------------------Save the final configuration to a data file
         "reset_atoms     id\n",
         "\n#Identify the top atoms of AFM tip\n\n",
-        f"region          tip_fix block INF INF INF INF {z-3} INF units box\n",
+        f"region          tip_fix block INF INF INF INF {h-3} INF units box\n",
         "group           tip_fix region tip_fix\n\n",
         "#Identify thermostat region of AFM tip\n\n",
-        f"region          tip_thermo block INF INF INF INF {z-5} {z-3} units box\n",
+        f"region          tip_thermo block INF INF INF INF {h-5} {h-3} units box\n",
         "group           tip_thermo region tip_thermo\n\n",
     ])
     
