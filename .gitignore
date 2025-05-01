@@ -2,3 +2,6 @@ visuals
 *.lammpstrj
 ptest
 scripts
+__pycache__
+tests
+results
