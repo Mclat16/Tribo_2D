@@ -93,7 +93,6 @@ def tip_build(var):
     
     lmp.close
 
-
 def sub_build(var):
     
     filename = f"{var['sub']['mat']}.lmp"
@@ -170,8 +169,6 @@ def sub_build(var):
     lmp.command(f"write_data      {var['dir']}/system_build/sub.lmp")
     
     lmp.close
-
-
 
 def amorph(system,filename,am_filename, tempmelt,var):
     

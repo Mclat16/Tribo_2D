@@ -194,11 +194,14 @@ def settings_afm(var,layer):
                 potentials[g]=[group_def[i][2] if g in group_def[i][0] else "NULL"
                                 for i in range(1,var['ngroups'][layer]+1)]
                 f.write(f"pair_coeff * * {var[g]['pot_type']} {t} {var['pot']['path'][g]} {'  '.join(potentials[g])} # interlayer {g.capitalize()}\n")
-        dist = 0
+        
+        h = 0
         for t in var['data']['2D']['elem_comp']:    
             for key in ('sub','tip'):
                 for s in var['data'][key]['elem_comp']:
                     e,sigma = LJparams(t,s)
+                    if key == 'sub' and s>h:
+                        h = s
                     if len(elemgroup['2D'][layer-1][t]) == 1 and layer == 1:
                         f.write(f"pair_coeff {elemgroup[key][s][0]}*{elemgroup[key][s][-1]} {elemgroup['2D'][0][t][0]} lj/cut {e} {sigma}\n")
                     else:  
@@ -220,7 +223,8 @@ def settings_afm(var,layer):
             for t in var['data']['tip']['elem_comp']:
                 e,sigma = LJparams(s,t)
                 f.write(f"pair_coeff {elemgroup['sub'][t][0]}*{elemgroup['sub'][t][-1]} {elemgroup['tip'][t][0]}*{elemgroup['tip'][t][-1]}  lj/cut {e} {sigma} \n")
-
+    
+    return h
 def settings_sb(var,filename,system):
     
     group_def = {}

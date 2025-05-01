@@ -75,10 +75,11 @@ class afm:
         for layer in self.var['2D']['layers']:
 
             [tip_x,tip_y,tip_z] = [self.var['dim']['xhi']/2, self.var['dim']['yhi']/2, 55+self.var['2D']['lat_c']*(layer-1)/2]# Tip placement
-            h_2D        = 15
+            
 
             filename = f"{self.directory[layer]}/lammps/system.lmp"
-
+            h = settings_afm(self.var,layer)
+            h_2D        = 10.5 + h
             with open(filename, 'w') as f:
                 init(f)
                 f.writelines([
@@ -89,10 +90,7 @@ class afm:
                     f"read_data       {self.var['dir']}/system_build/tip.lmp add append shift {tip_x} {tip_y} {tip_z}  group tip offset {self.var['data']['sub']['natype']} 0 0 0 0\n",
                     f"read_data       {self.var['dir']}/system_build/{self.var['2D']['mat']}_{layer}.lmp add append shift 0.0 0.0 {h_2D} group 2D offset {self.var['data']['tip']['natype']+self.var['data']['sub']['natype']} 0 0 0 0\n\n"
                 ])
-
-                
                 #generate potentials
-                settings_afm(self.var,layer) 
 
                 f.writelines([
                 "# Apply potentials\n\n",
