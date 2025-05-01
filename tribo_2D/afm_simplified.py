@@ -103,7 +103,7 @@ class afm:
                 "timestep        0.001\n",
                 "thermo          100\n\n",
                 #----------------- Apply Nose-Hoover thermostat ----------
-                "group           fixset union sub_fix tip_fix\n",
+                "group           fixset union sub_fix tip_all\n",
                 "group           system subtract all fixset\n\n",
                 f"velocity        system create {self.var['general']['temproom']} 492847948\n\n",
                 "compute         temp_tip tip_thermo temp/partial 0 1 0\n",
@@ -115,7 +115,7 @@ class afm:
                 "fix             nve_all all nve\n\n",
                 "fix             sub_fix sub_fix setforce 0.0 0.0 0.0 \n",
                 "velocity        sub_fix set 0.0 0.0 0.0\n\n",
-                "fix             tip_f tip_fix rigid/nve single force * off off off torque * off off off\n\n",
+                "fix             tip_f tip_all rigid/nve single force * off off off torque * off off off\n\n",
                 "run             10000\n\n",
                 "unfix           tip_f \n\n",
                 "##########################################################\n",
@@ -125,7 +125,7 @@ class afm:
                 "displace_atoms  tip_all move 0.0 0.0 -20.0 units box\n\n",
                 "#----------------- Apply constraints ---------------------\n\n",
 
-                "fix             tip_f tip_fix rigid/nve single force * off off on torque * off off off\n\n",
+                "fix             tip_f tip_all rigid/nve single force * off off on torque * off off off\n\n",
                 "variable        f equal 0.0\n",
 
                 f"variable find index {' '.join(str(x) for x in self.var['general']['force'])}\n",

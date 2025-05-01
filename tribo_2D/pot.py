@@ -200,8 +200,8 @@ def settings_afm(var,layer):
             for key in ('sub','tip'):
                 for s in var['data'][key]['elem_comp']:
                     e,sigma = LJparams(t,s)
-                    if key == 'sub' and s>h:
-                        h = s
+                    if key == 'sub' and sigma>h:
+                        h = sigma
                     if len(elemgroup['2D'][layer-1][t]) == 1 and layer == 1:
                         f.write(f"pair_coeff {elemgroup[key][s][0]}*{elemgroup[key][s][-1]} {elemgroup['2D'][0][t][0]} lj/cut {e} {sigma}\n")
                     else:  
