@@ -98,7 +98,7 @@ class afm:
                 "# Apply potentials\n\n",
                 f"include        {self.directory[layer]}/lammps/system.in.settings\n\n",
                 "#----------------- Create visualisation files ------------\n\n",
-                f"dump            sys all atom 10000 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
+                f"dump            sys all atom 1000 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
                 "#----------------- Minimize the system -------------------\n\n",
                 "min_style       cg\n",
                 "minimize        1.0e-4 1.0e-8 100 1000\n\n",
@@ -187,9 +187,8 @@ class afm:
 
             filename = f"{self.directory[layer]}/lammps/slide_{self.var['tip']['s'] }ms.lmp"
             with open(filename, 'w') as f:
-                init(f)
+                # init(f)
                 f.writelines([
-                f"dump            sys all atom 20000 ./{self.var['dir']}/visuals/slide_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n"
 
                 f"variable find index {' '.join(str(x) for x in self.var['general']['force'])}\n",
                 "label force_loop\n",
@@ -198,6 +197,9 @@ class afm:
                 "label angle_loop\n",
                 ])
                 init(f)
+
+                f"dump            sys all atom 10000 ./{self.var['dir']}/visuals/slide_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n"
+                "dump_modify sys append yes\n",
                 f.writelines([
                 f"read_data       {self.directory[layer]}/data/load_$(v_find)N.data # Read system data\n\n",
                 f"include         {self.directory[layer]}/lammps/system.in.settings\n\n",
