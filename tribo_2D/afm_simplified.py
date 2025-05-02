@@ -96,7 +96,7 @@ class afm:
                 "# Apply potentials\n\n",
                 f"include        {self.directory[layer]}/lammps/system.in.settings\n\n",
                 "#----------------- Create visualisation files ------------\n\n",
-                f"dump            sys all atom 1000 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
+                f"dump            sys all atom 10000 ./{self.var['dir']}/visuals/system_{layer}.lammpstrj\n\n",
                 "#----------------- Minimize the system -------------------\n\n",
                 "min_style       cg\n",
                 "minimize        1.0e-4 1.0e-8 100 1000\n\n",
@@ -196,21 +196,21 @@ class afm:
                 ])
                 init(f)
 
-                f"dump            sys all atom 10000 ./{self.var['dir']}/visuals/slide_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n"
-                "dump_modify sys append yes\n",
+
                 f.writelines([
                 f"read_data       {self.directory[layer]}/data/load_$(v_find)N.data # Read system data\n\n",
                 f"include         {self.directory[layer]}/lammps/system.in.settings\n\n",
 
                 "#----------------- Create visualisation files ------------\n\n",
-                
+                f"dump            sys all atom 10000 ./{self.var['dir']}/visuals/slide_{self.var['tip']['s']}ms_l{layer}.lammpstrj\n\n"
+                "dump_modify sys append yes\n",
                 "##########################################################\n",
                 "#--------------------Tip Indentation---------------------#\n",
                 "##########################################################\n",
                 "#----------------- Apply constraints ---------------------\n\n",
 
                 "fix             sub_fix sub_fix setforce 0.0 0.0 0.0 \n",
-                "fix             tip_f tip_fix rigid/nve single force * on on on torque * off off off\n\n",
+                "fix             tip_f tip_all rigid/nve single force * on on on torque * off off off\n\n",
 
                 "#----------------- Apply Langevin thermostat -------------\n\n",
                 "compute         temp_tip tip_thermo temp/partial 0 1 0\n",
